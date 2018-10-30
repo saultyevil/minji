@@ -21,7 +21,9 @@ int init_photons (void)
   double photon_buff_size;
 
   double rad_lum = 1e6, n_photons = 1e6;
-  
+
+  Log ("\t- Initialising photon structure\n");
+
   /*
    * Read in the number of photon_main from file and check that it is a sensible
    * number. Even though N_PHOTONS is an int, read in n_photons as a double
@@ -35,8 +37,10 @@ int init_photons (void)
   if ((RAD_LUM = rad_lum) <= 0)
     Exit (2, "Invalid value for rad_lum: rad_lum > 0\n");
 
-  #ifdef MPION
+  #ifdef MPI_ON
+    n_photons_og = N_PHOTONS;
     N_PHOTONS /= n_mpi_processes;
+    PROGRESS_OUT_FREQ /= n_mpi_processes;
   #endif
   
   /*
@@ -44,8 +48,15 @@ int init_photons (void)
    * space cannot be allocated, then this should be reported and the program
    * will exit
    */
-  
-  Log ("\t- Initialising photon structure\n");
+
+  Log ("\t\t- Defining %1.2e photons per process", (double) N_PHOTONS);
+
+  #ifdef MPI_ON
+    Log (" (%1.2e in total)", n_photons);
+  #endif
+
+  Log ("\n");
+
   photon_buff_size = N_PHOTONS * sizeof (*phot_main);
   
   if (!(phot_main = calloc (N_PHOTONS, sizeof (*phot_main))))
@@ -54,7 +65,8 @@ int init_photons (void)
   
   Log ("\t\t- Allocated %1.2e bytes for %1.2e photons\n", photon_buff_size,
        (double) N_PHOTONS);
-  Log ("\t\t- Defining emitted photons\n");
+
+  Log ("\t\t- Generating photons\n");
   
   for (p = 0; p < N_PHOTONS; p++)
     define_photon (&phot_main[p], p);

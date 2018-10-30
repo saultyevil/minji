@@ -23,12 +23,18 @@ int init_gsl_seed (void)
   int seed = 666;
   
   get_int ("seed", &seed);
-  
+
+  /*
+   * When MPI is enabled, add the process number to the seed so each MPI
+   * process will have its own seed
+   */
+
   if ((rng = gsl_rng_alloc (gsl_rng_mt19937)))
-  {
-    gsl_rng_set (rng, (unsigned long) seed);
-    // Log ("Generating random sequence using seed %i\n", seed);
-  }
+    #ifdef MPI_ON
+      gsl_rng_set (rng, (unsigned long) seed + mpi_proc);
+    #else
+      gsl_rng_set (rng, (unsigned long) seed);
+    #endif
   else
     Exit (6, "init_gsl_seed: GSL error, couldn't allocate RNG. Not enough memory?\n");
   

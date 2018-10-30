@@ -6,7 +6,7 @@ BIN_DIR ?= ./bin
 
 # Macros for CC
 CC = mpicc
-CFLAGS = -pedantic -Wall -O2
+CFLAGS = -pedantic -Wall -O2 -DMPI_ON
 LIBS = -lm -lgsl -lgslcblas
 
 # Directories

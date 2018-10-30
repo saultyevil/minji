@@ -11,6 +11,7 @@
  * ************************************************************************** */
 
 #include <time.h>
+#include <stdio.h>
 
 #include "minji.h"
 
@@ -18,29 +19,25 @@ int mcrt_iterations (void)
 {
   int i;
   double xi;
+  double avg_n_scat;
   struct timespec mcrt_start;
   Photon *p;
 
   int n_scat = 0;
-  int proc_start = 0, proc_end = N_PHOTONS;
-  
+
   #ifdef MPI_ON
     int mpi_n_scat;
-    int phots_per_proc;
-    phots_per_proc = (double) N_PHOTONS / n_mpi_processes;
-    proc_start = mpi_proc * phots_per_proc;
-    proc_end = (mpi_proc + 1) * phots_per_proc;
   #endif
 
   Log (" - Beginning MCRT iterations\n");
 
-  #ifdef MPI_OP
+  #ifdef MPI_ON
     if (mpi_proc == MASTER_MPI_PROC)
   #endif
 
   mcrt_start = get_time ();
 
-  for (i = proc_start; i < proc_end; i++)
+  for (i = 0; i < N_PHOTONS; i++)
   {
     p = &phot_main[i];
 
@@ -60,10 +57,10 @@ int mcrt_iterations (void)
     
     if (i % PROGRESS_OUT_FREQ == 0 && i != 0)
       Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i,
-           (double) proc_end, (double) i / proc_end * 100);
-    else if (i == proc_end - 1)
+           (double) N_PHOTONS, (double) i / N_PHOTONS * 100);
+    else if (i == N_PHOTONS - 1)
       Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i,
-           (double) proc_end, (double) i / proc_end * 100);
+           (double) N_PHOTONS, (double) i / N_PHOTONS * 100);
   }
 
   #ifdef MPI_ON
@@ -73,13 +70,15 @@ int mcrt_iterations (void)
      */
 
     MPI_Barrier (MPI_COMM);
-    Log ("MPI OP: collecting n_scat from %i MPI processes\n", n_mpi_processes);
+    Log_verbose ("MPI OP: collecting n_scat from %i MPI processes\n",
+                  n_mpi_processes);
     MPI_Reduce (&n_scat, &mpi_n_scat, 1, MPI_INT, MPI_SUM, MASTER_MPI_PROC,
                 MPI_COMM);
     n_scat = mpi_n_scat;
+    avg_n_scat = (double) n_scat / n_photons_og;
   #endif
 
-  #ifdef MPI_OP
+  #ifdef MPI_ON
     if (mpi_proc == MASTER_MPI_PROC)
   #endif
 
@@ -87,7 +86,10 @@ int mcrt_iterations (void)
 
   Log ("\n--------------------------------------------------------------\n\n");
   Log (" MCRT Summary:\n\n");
-  Log (" - Average scatters per photon: %i\n", n_scat / N_PHOTONS);
+
+  avg_n_scat = (double) n_scat / N_PHOTONS;
+
+  Log (" - Average scatters per photon: %i\n", avg_n_scat);
   
   return SUCCESS;
 }

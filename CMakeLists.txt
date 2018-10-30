@@ -11,3 +11,4 @@ add_executable(minji
         src/spherical_geo.c)
 
 target_link_libraries(minji GSL::gsl GSL::gslcblas m)
+add_definitions(-DMPI_ON)

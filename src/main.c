@@ -22,6 +22,12 @@ int main (int argc, char **argv)
 
   int verbosity = FALSE;
 
+  #ifdef MPI_ON
+    MPI_Init (&argc, &argv);
+    MPI_Comm_rank (MPI_COMM, &mpi_proc);
+    MPI_Comm_size (MPI_COMM, &n_mpi_processes);
+  #endif
+
   start_time = get_time ();
   
   Log ("\n--------------------------------------------------------------\n\n");
@@ -77,6 +83,12 @@ int main (int argc, char **argv)
   Log ("\n--------------------------------------------------------------\n\n");
   print_duration (start_time, "Simulation completed in");
   Log ("\n--------------------------------------------------------------\n\n");
+
+
+  #ifdef MPI_ON
+    MPI_Barrier (MPI_COMM);
+    MPI_Finalize ();
+  #endif
 
   return SUCCESS;
 }

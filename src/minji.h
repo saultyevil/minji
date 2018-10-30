@@ -12,8 +12,8 @@
 
 #define TRUE 1
 #define FALSE 0
-#define SUCCESS 1
-#define FAILURE 0
+#define SUCCESS 0
+#define FAILURE 1
 #define LINE_LEN 256
 
 #ifdef MPI_ON
@@ -29,7 +29,8 @@
   
   int mpi_proc;
   int n_mpi_processes;
-  
+  int n_photons_og;
+
 #endif
 
 /*
