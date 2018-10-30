@@ -25,7 +25,7 @@ int find_par_file (char *file_path)
   Log ("Please input the file path to the parameter file: ");
   ierr = scanf ("%s", file_path);
   if (ierr == EOF)
-    Exit (5, "find_par_file: Nothing entered for parameter file file path\n");
+    Exit (5, "Nothing entered for parameter file file path\n");
   
   return SUCCESS;
 }
@@ -34,7 +34,7 @@ int init_parameter_file (char *file_path)
 {
   PAR_FILE_PTR = fopen (file_path, "r");
   if (!PAR_FILE_PTR)
-    Exit (2, "init_parameter_file: Could not find parameter file '%s'\n",
+    Exit (2, "Could not find parameter file '%s'\n",
           file_path);
   Log (" - Loaded parameter file '%s'\n", file_path);
   
@@ -62,7 +62,7 @@ int get_double (char *par_name, double *value)
     if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
     if (sscanf (line, "%s %s %s", ini_par_name, par_sep, par_value) != 3)
-      Exit (7, "get_double: Syntax error on line %i in parameter file\n",
+      Exit (7, "Syntax error on line %i in parameter file\n",
             line_num);
     if (strcmp (par_name, ini_par_name) == 0)
     {
@@ -100,7 +100,7 @@ int get_int (char *par_name, int *value)
     if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
     if (sscanf (line, "%s %s %s", ini_par_name, par_sep, par_value) != 3)
-      Exit (7, "get_double: Syntax error on line %i in parameter file\n",
+      Exit (7, "Syntax error on line %i in parameter file\n",
             line_num);
     if (strcmp (par_name, ini_par_name) == 0)
     {
@@ -138,7 +138,7 @@ int get_string  (char *par_name, char *value)
     if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
     if (sscanf (line, "%s %s %s", ini_par_name, par_sep, par_value) != 3)
-      Exit (7, "get_double: Syntax error on line %i in parameter file\n",
+      Exit (7, "Syntax error on line %i in parameter file\n",
             line_num);
     if (strcmp (par_name, ini_par_name) == 0)
     {
@@ -164,7 +164,7 @@ int input_double (char *par_name, double *value)
   Log ("%s not found, input value:\n%s (%f): ", par_name, par_name, *value);
   ierr = scanf ("%s", input_value);
   if (ierr == EOF)
-    Exit (9, "input_double: Nothing entered for input par\n");
+    Exit (9, "Nothing entered for input par\n");
   *value = atof (input_value);
   
   return SUCCESS;
@@ -178,7 +178,7 @@ int input_int (char *par_name, int *value)
   Log ("%s not found, input value:\n%s (%i): ", par_name, par_name, *value);
   ierr = scanf ("%s", input_value);
   if (ierr == EOF)
-    Exit (9, "input_int: Nothing entered for input par\n");
+    Exit (9, "Nothing entered for input par\n");
   *value = atoi (input_value);
   
   return SUCCESS;
@@ -192,7 +192,7 @@ int input_string (char *par_name, char *value)
   Log ("%s not found, input value: \n%s (%s): ", par_name, par_name, value);
   ierr = scanf ("%s", input_value);
   if (ierr == EOF)
-    Exit (9, "input_string: Nothing entered for input par\n");
+    Exit (9, "Nothing entered for input par\n");
   strcpy (value, input_value);
   
   return SUCCESS;
@@ -218,7 +218,7 @@ int get_optional_int (char *par_name, int *value)
     if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
     if (sscanf (line, "%s %s %s", ini_par_name, par_sep, par_value) != 3)
-      Exit (7, "get_double: Syntax error on line %i in parameter file\n",
+      Exit (7, "Syntax error on line %i in parameter file\n",
             line_num);
     if (strcmp (par_name, ini_par_name) == 0)
       *value = atoi (par_value);
@@ -247,7 +247,7 @@ int get_optional_double (char *par_name, double *value)
     if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
     if (sscanf (line, "%s %s %s", ini_par_name, par_sep, par_value) != 3)
-      Exit (7, "get_double: Syntax error on line %i in parameter file\n",
+      Exit (7, "Syntax error on line %i in parameter file\n",
             line_num);
     if (strcmp (par_name, ini_par_name) == 0)
       *value = atof (par_value);

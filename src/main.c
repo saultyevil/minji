@@ -49,7 +49,7 @@ int main (int argc, char **argv)
   else if (argc == 2)
     strcpy (par_file_path, argv[1]);
   else
-    Exit (1, "main: Too many arguments provided\n");
+    Exit (1, "Too many arguments provided\n");
   
   init_parameter_file (par_file_path);
 
@@ -86,7 +86,6 @@ int main (int argc, char **argv)
 
 
   #ifdef MPI_ON
-    MPI_Barrier (MPI_COMM);
     MPI_Finalize ();
   #endif
 

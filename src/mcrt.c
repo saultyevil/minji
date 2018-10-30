@@ -67,6 +67,8 @@ int mcrt_iterations (void)
     /*
      * Use MPI_Barrier and MPI_Reduce to find the total number of scatters
      * across all MPI processes
+     *
+     * TODO: shouldn't need the barrier.. delete?
      */
 
     MPI_Barrier (MPI_COMM);
@@ -76,6 +78,8 @@ int mcrt_iterations (void)
                 MPI_COMM);
     n_scat = mpi_n_scat;
     avg_n_scat = (double) n_scat / n_photons_og;
+  #else
+    avg_n_scat = (double) n_scat / N_PHOTONS;
   #endif
 
   #ifdef MPI_ON
@@ -86,10 +90,7 @@ int mcrt_iterations (void)
 
   Log ("\n--------------------------------------------------------------\n\n");
   Log (" MCRT Summary:\n\n");
-
-  avg_n_scat = (double) n_scat / N_PHOTONS;
-
-  Log (" - Average scatters per photon: %i\n", avg_n_scat);
+  Log (" - Average scatters per photon: %i\n", (int) avg_n_scat);
   
   return SUCCESS;
 }
