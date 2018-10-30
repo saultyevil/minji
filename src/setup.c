@@ -1,0 +1,53 @@
+/* ***************************************************************************
+ *
+ * @file
+ *
+ * @author
+ *
+ * @brief
+ *
+ * @details
+ *
+ * ************************************************************************** */
+
+#include <string.h>
+
+#include "minji.h"
+
+int init_geo (void)
+{
+  double out_freq = 1e5;
+
+  /*
+   * Get any variables which don't fit elsewhere
+   */
+
+  get_double ("output_freq", &out_freq);
+  if ((PROGRESS_OUT_FREQ = (int) out_freq) < 0)
+    Exit (2, "Invalid value for output_freq: output_freq > 0\n");
+  get_double ("scat_albedo", &geo.scat_albedo);
+  if (geo.scat_albedo < 0)
+    Exit (2, "Invalid value for scat_albedo: scat_albedo > 0\n");
+
+  /*
+   * Get the grid and model types sand call the appropriate grid initialisation
+   * routine
+   */
+
+  get_string ("geo_type", geo.geo_type);
+
+  if (!(strcmp (geo.geo_type, PLANAR)))
+  {
+    Log ("\t- Initialising grid for 1d planar atmosphere\n");
+    init_planar_geo ();
+  }
+  else if (!(strcmp (geo.geo_type, SPHERICAL)))
+  {
+    Log ("\t- Initialising grid for 1d spherical atmosphere\n");
+    init_spherical_geo ();
+  }
+  else
+    Exit (2, "Invalid choice '%s' for geo_type\n", geo.geo_type);
+
+  return SUCCESS;
+}
