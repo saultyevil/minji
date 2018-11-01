@@ -25,6 +25,8 @@ int mcrt_iterations (void)
 
   int n_scat = 0;
 
+  TRANS_FUDGE = 1e-5 * (geo.x_max / geo.nx_cells);
+
   #ifdef MPI_ON
     int mpi_n_scat;
   #endif
@@ -53,6 +55,10 @@ int mcrt_iterations (void)
       }
 
       trans_phot (p);
+
+      if (p->x < 0)
+        define_photon (p, p->n);  // re-emit a new photon
+
     }
     
     if (i % PROGRESS_OUT_FREQ == 0 && i != 0)

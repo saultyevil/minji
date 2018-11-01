@@ -14,14 +14,14 @@
 
 #include "minji.h"
 
-int scatter_phot (Photon *photon)
+int scatter_phot (Photon *p)
 {
   double theta, phi;
   
   random_theta_phi (&theta, &phi);
-  photon->nx = sin (theta) * cos (phi);
-  photon->ny = sin (theta) * sin (phi);
-  photon->nz = cos (theta);
+  p->nx = sin (theta) * cos (phi);
+  p->ny = sin (theta) * sin (phi);
+  p->nz = cos (theta);
   
   return SUCCESS;
 }

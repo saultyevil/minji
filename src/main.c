@@ -77,8 +77,9 @@ int main (int argc, char **argv)
   mcrt_iterations ();
 
   /*
-   * End of the simulation
+   * Now we will plot the output
    */
+
 
   Log ("\n--------------------------------------------------------------\n\n");
   print_duration (start_time, "Simulation completed in");

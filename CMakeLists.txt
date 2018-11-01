@@ -7,8 +7,8 @@ find_package(GSL REQUIRED)
 add_executable(minji
         src/functions.h src/main.c src/mcrt.c src/minji.h src/photon.c
         src/random.c src/read_pars.c src/scatter.c src/setup.c src/time.c
-        src/utility.c src/default_pars.c src/trans_phot.c src/planar_geo.c
-        src/spherical_geo.c)
+        src/utility.c src/default_pars.c src/trans_phot.c src/grid_set.c
+        src/output.c)
 
 target_link_libraries(minji GSL::gsl GSL::gslcblas m)
 add_definitions(-DMPI_ON)

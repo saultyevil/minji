@@ -1,10 +1,12 @@
-# Minji - an MCRT code using the Eddington Approximation
+# Minji - an MCRT sandbox code 
 
 ## Purpose
 
-The purpose of this software is to test the performance of using the [Eddington approximation](https://en.wikipedia.org/wiki/Radiative_transfer#The_Eddington_approximation) to estimate the physical conditions in cells within the optically thick limit. For cells not in the optically thick limit, Monte Carlo Radiative Transfer is used to estimate the physical conditions.
+The purpose of this software, at least during my PhD life, is to act as a starting point for sandbox codes which will be used to test MCRT acceleration techniques or other more general MCRT methods in a safe, 1D environment.
+ 
+ It was originally created to test the performance of using the [Eddington approximation](https://en.wikipedia.org/wiki/Radiative_transfer#The_Eddington_approximation) to estimate the physical conditions in cells within the optically thick limit. For cells not in the optically thick limit, Monte Carlo Radiative Transfer is used to estimate the physical conditions.
 
-**Currently a WIP - a 1d planar atmosphere has been implemented with standard MCRT transport**
+**Currently a WIP...**
 
 ## Requirement
 

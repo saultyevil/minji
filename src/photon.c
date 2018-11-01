@@ -17,7 +17,7 @@
 
 int init_photons (void)
 {
-  int p;
+  int i;
   double photon_buff_size;
 
   double rad_lum = 1e6, n_photons = 1e6;
@@ -49,13 +49,11 @@ int init_photons (void)
    * will exit
    */
 
-  Log ("\t\t- Defining %1.2e photons per process", (double) N_PHOTONS);
+  Log ("\t\t- Defining %1.2e photons in total\n", n_photons);
 
   #ifdef MPI_ON
-    Log (" (%1.2e in total)", n_photons);
+    Log ("\t\t- Allocating %1.2e photons per process\n", (double) N_PHOTONS);
   #endif
-
-  Log ("\n");
 
   photon_buff_size = N_PHOTONS * sizeof (*phot_main);
   
@@ -68,19 +66,19 @@ int init_photons (void)
 
   Log ("\t\t- Generating photons\n");
   
-  for (p = 0; p < N_PHOTONS; p++)
-    define_photon (&phot_main[p], p);
+  for (i = 0; i < N_PHOTONS; i++)
+    define_photon (&phot_main[i], i);
   
   return SUCCESS;
 }
 
-int define_photon (Photon *photon, int number)
+int define_photon (Photon *p, int number)
 {
   double theta, phi;
   
-  photon->n = number;
-  photon->in_grid = TRUE;
-  photon->w = photon->w_0 = RAD_LUM / N_PHOTONS;
+  p->n = number;
+  p->in_grid = TRUE;
+  p->w = p->w_0 = RAD_LUM / N_PHOTONS;
   
   /*
    * Generate a random theta and phi direction and update the x, y and z
@@ -88,9 +86,18 @@ int define_photon (Photon *photon, int number)
    */
 
   random_theta_phi (&theta, &phi);
-  photon->nx = sin (theta) * cos (phi);
-  photon->ny = sin (theta) * sin (phi);
-  photon->nz = cos (theta);
+  p->nx = sin (theta) * cos (phi);
+  p->ny = sin (theta) * sin (phi);
+  p->nz = cos (theta);
+
+  /*
+   * Set photons to be emitted from the origin, i.e. the first cell
+   */
+
+  p->x = TRANS_FUDGE;
+  p->y = TRANS_FUDGE;
+  p->z = TRANS_FUDGE;
+  p->icell = (int) (p->x * geo.nx_cells / geo.x_max);
 
   return SUCCESS;
 }

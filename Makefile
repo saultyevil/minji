@@ -1,6 +1,6 @@
 # Helpful macros
 TARGET_EXEC ?= minji
-OBJ_DIR ?= ./objs
+OBJ_DIR ?= ./srcI/objs
 SRC_DIRS ?= ./src
 BIN_DIR ?= ./bin
 

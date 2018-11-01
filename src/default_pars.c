@@ -34,8 +34,9 @@ int init_default_pars (void)
   geo.tau_max = 10.0;
   geo.scat_albedo = 1.0;
   geo.s_max_frac = 0.999;
+  geo.rho_exp = -2.0;
 
-  // TODO: find better place to put this
+  // TODO: find a better place to put this
   get_optional_double ("s_max_frac", &geo.s_max_frac);
 
   return SUCCESS;

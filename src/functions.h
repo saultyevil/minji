@@ -17,26 +17,32 @@
 int init_default_pars (void);
 
 /*
+ * grid_set.c
+ */
+
+int allocate_1d_grid (void);
+int get_grid_params (void);
+int init_grid (void);
+
+/*
  * mcrt.c
  */
 
 int mcrt_iterations (void);
 
 /*
+ * output.c
+ */
+
+int write_grid_to_file (char *filename);
+
+/*
  * photon.c
  */
 
-int define_photon (Photon *photon, int photon_number);
+int define_photon (Photon *p, int photon_number);
 int init_photons (void);
 int traverse_phot_ds (Photon *p, double ds);
-
-/*
- * planar_geo.c
- */
-
-int allocate_planar_grid (void);
-int get_planar_params (void);
-int init_planar_geo (void);
 
 /*
  * random.c
@@ -66,7 +72,7 @@ int init_parameter_file (char *par_filepath);
  * scatter.c
  */
 
-int scatter_phot (Photon *photon);
+int scatter_phot (Photon *p);
 
 /*
  * setup.c
@@ -74,11 +80,6 @@ int scatter_phot (Photon *photon);
 
 int init_geo (void);
 
-/*
- * spherical_geo.c
- */
-
-int init_spherical_geo (void);
 
 /*
  * time.c

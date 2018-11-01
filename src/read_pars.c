@@ -73,8 +73,8 @@ int get_double (char *par_name, double *value)
   
   if (!found_par)
     input_double (par_name, value);
-  else
-    Log_verbose ("%s %f\n", par_name, *value);
+  else ; // TODO: remove
+    // Log_verbose ("%s %f\n", par_name, *value);
   
   return SUCCESS;
 }
@@ -111,8 +111,8 @@ int get_int (char *par_name, int *value)
   
   if (!found_par)
     input_int (par_name, value);
-  else
-    Log_verbose ("%s %i\n", par_name, *value);
+  else ; // TODO: remove
+    // Log_verbose ("%s %i\n", par_name, *value);
   
   return SUCCESS;
 }
@@ -149,8 +149,8 @@ int get_string  (char *par_name, char *value)
   
   if (!found_par)
     input_string (par_name, value);
-  else
-    Log_verbose ("%s %i\n", par_name, *value);
+  else ;  // TODO: remove
+    // Log_verbose ("%s %s\n", par_name, value);
   
   return SUCCESS;
 }

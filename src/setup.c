@@ -36,15 +36,10 @@ int init_geo (void)
 
   get_string ("geo_type", geo.geo_type);
 
-  if (!(strcmp (geo.geo_type, PLANAR)))
+  if (!(strcmp (geo.geo_type, PLANAR)) || !(strcmp (geo.geo_type, SPHERICAL)))
   {
-    Log ("\t- Initialising grid for 1d planar atmosphere\n");
-    init_planar_geo ();
-  }
-  else if (!(strcmp (geo.geo_type, SPHERICAL)))
-  {
-    Log ("\t- Initialising grid for 1d spherical atmosphere\n");
-    init_spherical_geo ();
+    Log ("\t- Initialising grid for 1d %s atmosphere\n", geo.geo_type);
+    init_grid ();
   }
   else
     Exit (2, "Invalid choice '%s' for geo_type\n", geo.geo_type);

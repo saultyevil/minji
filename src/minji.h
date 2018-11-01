@@ -41,6 +41,7 @@ int N_PHOTONS;
 int VERBOSITY;
 int PROGRESS_OUT_FREQ;
 double RAD_LUM;
+double TRANS_FUDGE;
 
 /*
  * The available grid types -- note that this code will exploit symmetry
@@ -60,6 +61,7 @@ typedef struct Geometry
   double hx;
   double x_max;
   double s_max_frac;
+  double rho_exp;
   double tau_max;
   double scat_albedo;
 } Geometry;

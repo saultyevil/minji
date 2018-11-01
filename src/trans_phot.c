@@ -10,9 +10,9 @@
  *
  * ************************************************************************** */
 
-#include "minji.h"
+#include <string.h>
 
-double DELTA;
+#include "minji.h"
 
 int trans_phot (Photon *p)
 {
@@ -20,7 +20,6 @@ int trans_phot (Photon *p)
   double s_max, d_cell;
   double tau_cell, d_move;
 
-  DELTA = 1e-5 * (geo.x_max / geo.nx_cells);
 
   /*
    * Initialise the photon's current ds/tau to be 0 to indicate that this is
@@ -30,7 +29,12 @@ int trans_phot (Photon *p)
 
   p->ds = 0;
   p->tau = 0;
-  p->tau_scat = random_tau ();
+
+  if (!(strcmp (geo.geo_type, PLANAR)))  // TODO: remove this -- added for testing
+    p->tau_scat = random_tau () / geo.tau_max;
+  else
+    p->tau_scat = random_tau ();
+
 
   /*
    * Calculate the total distance, s_max, the photon is required to traverse to
@@ -39,7 +43,7 @@ int trans_phot (Photon *p)
    */
 
   dist_to_edge (p, &s_max);
-  if (s_max < DELTA)
+  if (s_max < TRANS_FUDGE)
   {
     p->in_grid = FALSE;
     return SUCCESS;
@@ -129,7 +133,7 @@ int dist_to_cell_wall (Photon *p, double *d_cell)
   if (p->nx > 0)
   {
     dx = (grid[p->icell].x - p->x) / p->nx;
-    if (dx < DELTA)
+    if (dx < TRANS_FUDGE)
     {
       p->x = grid[p->icell].x;
       p->icell += 1;
@@ -139,7 +143,7 @@ int dist_to_cell_wall (Photon *p, double *d_cell)
   else if (p->nx < 0)
   {
     dx = (grid[p->icell - 1].x - p->x) / p->nx;
-    if (dx < DELTA)
+    if (dx < TRANS_FUDGE)
     {
       p->x = grid[p->icell - 1].x;
       p->icell -= 1;
@@ -149,8 +153,8 @@ int dist_to_cell_wall (Photon *p, double *d_cell)
   else
     dx = 100 * geo.x_max;
 
-  if (dx <= 0)
-    Log_error ("trans_phot: p %i: dx <= 0 (dx = %f)\n", p->n, dx);
+  if (dx < 0)
+    Log_error ("trans_phot: p %i: dx < 0 (dx = %f)\n", p->n, dx);
 
   *d_cell = dx;
 
