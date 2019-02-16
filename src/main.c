@@ -15,21 +15,20 @@
 
 #include "minji.h"
 
-int main (int argc, char **argv)
+int
+main (int argc, char **argv)
 {
   struct timespec start_time;
   char par_file_path[LINE_LEN];
 
-  int verbosity = FALSE;
-
-  #ifdef MPI_ON
-    MPI_Init (&argc, &argv);
-    MPI_Comm_rank (MPI_COMM, &mpi_proc);
-    MPI_Comm_size (MPI_COMM, &n_mpi_processes);
-  #endif
+#ifdef MPI_ON
+  MPI_Init (&argc, &argv);
+  MPI_Comm_rank (MPI_COMM, &mpi.proc);
+  MPI_Comm_size (MPI_COMM, &mpi.n_procs);
+#endif
 
   start_time = get_time ();
-  
+
   Log ("\n--------------------------------------------------------------\n\n");
   print_time ();
   Log ("\n--------------------------------------------------------------\n\n");
@@ -49,15 +48,14 @@ int main (int argc, char **argv)
   else if (argc == 2)
     strcpy (par_file_path, argv[1]);
   else
-    Exit (1, "Too many arguments provided\n");
-  
+    Exit (INVALID_INPUT_ERROR, "Too many arguments provided\n");
+
   init_parameter_file (par_file_path);
 
-  get_optional_int ("verbosity", &verbosity);
-  VERBOSITY = verbosity;
-  if ((VERBOSITY != FALSE) && (VERBOSITY != TRUE))
-    Exit (2, "Invalid value for verbosity: verbosity should be 0 or 1\n");
-  
+  get_optional_int ("verbosity", &config.verbosity);
+  if ((config.verbosity != FALSE) && (config.verbosity != TRUE))
+    Exit (INVALID_PARAMETER_ERROR, "Invalid value for verbosity: verbosity should be 0 or 1\n");
+
   /*
    * Begin the process of initialising all of the simulation components such
    * as the photons and the the density grid
@@ -77,18 +75,17 @@ int main (int argc, char **argv)
   mcrt_iterations ();
 
   /*
-   * Now we will plot the output
+   * Indicate the end of the simulation and clean up
    */
-
 
   Log ("\n--------------------------------------------------------------\n\n");
   print_duration (start_time, "Simulation completed in");
   Log ("\n--------------------------------------------------------------\n\n");
 
 
-  #ifdef MPI_ON
-    MPI_Finalize ();
-  #endif
+#ifdef MPI_ON
+  MPI_Finalize ();
+#endif
 
   return SUCCESS;
 }

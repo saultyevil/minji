@@ -14,21 +14,22 @@
 
 #include "minji.h"
 
-int init_default_pars (void)
+int
+init_default_pars (void)
 {
   /*
    * Initialise the general parameters for MCRT iterations
    */
 
-  N_PHOTONS = (int) 1e6;
-  PROGRESS_OUT_FREQ = (int) 1e5;
-  RAD_LUM = 1e6;
+  geo.n_photons = (int) 1e6;
+  geo.rad_lum = geo.n_photons;
+  config.progress_out_freq = (int) 1e5;
 
   /*
    * Initialise the geo pars to be a small planar atmosphere
    */
 
-  strcpy (geo.geo_type, PLANAR);
+  strcpy (geo.grid_type, PLANE);
   geo.nx_cells = 100;
   geo.x_max = 1.0;
   geo.tau_max = 10.0;
@@ -37,7 +38,14 @@ int init_default_pars (void)
   geo.rho_exp = -2.0;
 
   // TODO: find a better place to put this
-  get_optional_double ("s_max_frac", &geo.s_max_frac);
+  get_optional_double (SMAX_MAX_STR, &geo.s_max_frac);
+
+  /*
+   * Initialise filenames
+   */
+
+  strcpy (filenames.grid_output, "grid.out");
+
 
   return SUCCESS;
 }

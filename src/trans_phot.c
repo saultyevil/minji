@@ -14,7 +14,8 @@
 
 #include "minji.h"
 
-int trans_phot (Photon *p)
+void
+trans_phot (Photon * p)
 {
   double ds_max_frac;
   double s_max, d_cell;
@@ -30,7 +31,7 @@ int trans_phot (Photon *p)
   p->ds = 0;
   p->tau = 0;
 
-  if (!(strcmp (geo.geo_type, PLANAR)))  // TODO: remove this -- added for testing
+  if (!(strcmp (geo.grid_type, PLANE))) // TODO: remove this -- added for testing
     p->tau_scat = random_tau () / geo.tau_max;
   else
     p->tau_scat = random_tau ();
@@ -43,10 +44,10 @@ int trans_phot (Photon *p)
    */
 
   dist_to_edge (p, &s_max);
-  if (s_max < TRANS_FUDGE)
+  if (s_max < geo.trans_fudge)
   {
     p->in_grid = FALSE;
-    return SUCCESS;
+    return;
   }
 
   /*
@@ -64,7 +65,7 @@ int trans_phot (Photon *p)
      *      dtau = rho * kappa * ds
      */
 
-    dist_to_cell_wall (p, &d_cell);
+    ds_to_cell_wall (p, &d_cell);
     tau_cell = grid[p->icell].opac * grid[p->icell].dens * d_cell;
 
     /*
@@ -77,8 +78,7 @@ int trans_phot (Photon *p)
      */
 
     if ((p->tau + tau_cell) >= p->tau_scat)
-      d_move = (p->tau_scat - p->tau) /
-                                    (grid[p->icell].opac * grid[p->icell].dens);
+      d_move = (p->tau_scat - p->tau) / (grid[p->icell].opac * grid[p->icell].dens);
     else
       d_move = d_cell;
 
@@ -103,12 +103,11 @@ int trans_phot (Photon *p)
     p->in_grid = FALSE;
   else
     traverse_phot_ds (p, d_move);
-
-  return SUCCESS;
 }
 
 // We only care about it traversing in one direction as it is 1d
-int dist_to_edge (Photon *p, double *s_max)
+void
+dist_to_edge (Photon * p, double *s_max)
 {
   if (p->nx > 0)
     *s_max = (geo.x_max - p->x) / p->nx;
@@ -116,8 +115,6 @@ int dist_to_edge (Photon *p, double *s_max)
     *s_max = -p->x / p->nx;
   else
     *s_max = 100 * geo.x_max;
-
-  return SUCCESS;
 }
 
 /*
@@ -126,14 +123,15 @@ int dist_to_edge (Photon *p, double *s_max)
  * calculate dx for the new cell
  */
 
-int dist_to_cell_wall (Photon *p, double *d_cell)
+void
+ds_to_cell_wall (Photon *p, double *ds)
 {
   double dx;
 
   if (p->nx > 0)
   {
     dx = (grid[p->icell].x - p->x) / p->nx;
-    if (dx < TRANS_FUDGE)
+    if (dx < geo.trans_fudge)
     {
       p->x = grid[p->icell].x;
       p->icell += 1;
@@ -143,11 +141,11 @@ int dist_to_cell_wall (Photon *p, double *d_cell)
   else if (p->nx < 0)
   {
     dx = (grid[p->icell - 1].x - p->x) / p->nx;
-    if (dx < TRANS_FUDGE)
+    if (dx < geo.trans_fudge)
     {
       p->x = grid[p->icell - 1].x;
       p->icell -= 1;
-      dx =(grid[p->icell - 1].x - p->x) / p->nx;
+      dx = (grid[p->icell - 1].x - p->x) / p->nx;
     }
   }
   else
@@ -156,7 +154,5 @@ int dist_to_cell_wall (Photon *p, double *d_cell)
   if (dx < 0)
     Log_error ("trans_phot: p %i: dx < 0 (dx = %f)\n", p->n, dx);
 
-  *d_cell = dx;
-
-  return SUCCESS;
+  *ds = dx;
 }

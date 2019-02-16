@@ -16,39 +16,58 @@
 #define FAILURE 1
 #define LINE_LEN 256
 
+#include "parameters.h"
+
 #ifdef MPI_ON
 
   /*
    * Global variables for MPI parallelisation
    */
 
-  #include <mpi.h>
- 
-  #define MPI_COMM MPI_COMM_WORLD
-  #define MASTER_MPI_PROC 0
-  
-  int mpi_proc;
-  int n_mpi_processes;
-  int n_photons_og;
+#include <mpi.h>
+
+#define MPI_COMM MPI_COMM_WORLD
+#define MASTER_MPI_PROC 0
+
+typedef struct MPI_Config
+{
+  int proc;
+  int n_procs;
+  int tot_n_photons;
+} MPI_Config;
+
+MPI_Config mpi;
+
 
 #endif
 
-/*
- * Global variables
- */
 
-int N_PHOTONS;
-int VERBOSITY;
-int PROGRESS_OUT_FREQ;
-double RAD_LUM;
-double TRANS_FUDGE;
+typedef struct Config
+{
+  int verbosity;
+  int progress_out_freq;
+} Config;
+
+Config config;
 
 /*
  * The available grid types -- note that this code will exploit symmetry
  */
 
-#define PLANAR "planar"
+#define PLANE "plane"
 #define SPHERICAL "spherical"
+
+enum Errors
+{
+  MEM_ALLOC_ERROR = 1,
+  INVALID_PARAMETER_ERROR,
+  INVALID_INPUT_ERROR,
+  NOT_IMPLEMENTED_ERROR,
+  FILE_OPEN_ERROR,
+  FILE_CLOSE_ERROR,
+  GSL_RNG_ERROR,
+  PAR_FILE_SYNTAX_ERROR,
+};
 
 /*
  * The structure to hold various geometry parameters
@@ -56,8 +75,11 @@ double TRANS_FUDGE;
 
 typedef struct Geometry
 {
-  char geo_type[LINE_LEN];
+  char grid_type[LINE_LEN];
   int nx_cells;
+  int n_photons;
+  double trans_fudge;
+  double rad_lum;
   double hx;
   double x_max;
   double s_max_frac;
@@ -80,10 +102,11 @@ typedef struct Photon
   double w, w_0;
 } Photon;
 
-Photon *phot_main;
+Photon *photon_bank;
 
 typedef struct Grid
 {
+
   double n;
   double x;
   double opac;
@@ -91,5 +114,12 @@ typedef struct Grid
 } Grid;
 
 Grid *grid;
+
+typedef struct Files
+{
+  char grid_output[LINE_LEN];
+} Files;
+
+Files filenames;
 
 #include "functions.h"
