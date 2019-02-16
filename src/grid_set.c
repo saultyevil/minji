@@ -74,7 +74,7 @@ init_grid (void)
     if (!(strcmp (geo.grid_type, PLANE)))
     {
       grid[i].dens = 1.0;
-      grid[i].opac = geo.tau_max / geo.nx_cells;  // TODO: non-uniform density
+      grid[i].opac = geo.tau_max / geo.nx_cells;  // TODO: remove temporary opacity
       tau_escape += grid[i].opac * grid[i].dens;
     }
     else if (!(strcmp (geo.grid_type, SPHERICAL)))
@@ -82,6 +82,7 @@ init_grid (void)
       Exit (NOT_IMPLEMENTED_ERROR, "1d spherical grid isn't implemented yet\n");
     }
   }
+
   Log ("\t\t- Optical depth to escape = %f\n", tau_escape);
   Log ("\t\t- Writing grid to file\n");
   write_grid_to_file (filenames.grid_output);

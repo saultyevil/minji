@@ -18,11 +18,11 @@
 
 #include "parameters.h"
 
-#ifdef MPI_ON
+/*
+ * Parameters and structures for when MPI is enabled
+ */
 
-  /*
-   * Global variables for MPI parallelisation
-   */
+#ifdef MPI_ON
 
 #include <mpi.h>
 
@@ -38,9 +38,11 @@ typedef struct MPI_Config
 
 MPI_Config mpi;
 
-
 #endif
 
+/*
+ * Structs and enumerators for the simulation
+ */
 
 typedef struct Config
 {
@@ -50,12 +52,12 @@ typedef struct Config
 
 Config config;
 
-/*
- * The available grid types -- note that this code will exploit symmetry
- */
+typedef struct Files
+{
+  char grid_output[LINE_LEN];
+} Files;
 
-#define PLANE "plane"
-#define SPHERICAL "spherical"
+Files filenames;
 
 enum Errors
 {
@@ -70,8 +72,11 @@ enum Errors
 };
 
 /*
- * The structure to hold various geometry parameters
+ * The structure to hold various geometry parameters and other related macros
  */
+
+#define PLANE "plane"
+#define SPHERICAL "spherical"
 
 typedef struct Geometry
 {
@@ -90,6 +95,20 @@ typedef struct Geometry
 
 Geometry geo;
 
+typedef struct Grid
+{
+  int n;
+  double x;
+  double opac;
+  double dens;
+} Grid;
+
+Grid *grid;
+
+/*
+ * The struct for photons - note that photon_bank is an array of photons.
+ */
+
 typedef struct Photon
 {
   int n;
@@ -103,23 +122,5 @@ typedef struct Photon
 } Photon;
 
 Photon *photon_bank;
-
-typedef struct Grid
-{
-
-  double n;
-  double x;
-  double opac;
-  double dens;
-} Grid;
-
-Grid *grid;
-
-typedef struct Files
-{
-  char grid_output[LINE_LEN];
-} Files;
-
-Files filenames;
 
 #include "functions.h"

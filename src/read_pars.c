@@ -16,26 +16,35 @@
 
 #include "minji.h"
 
+char PAR_FILE_PATH[LINE_LEN];
 FILE *PAR_FILE_PTR;
 
 void
-find_par_file (char *file_path)
+find_par_file (char *filename)
 {
   int ierr;
 
   Log ("Please input the file path to the parameter file: ");
-  ierr = scanf ("%s", file_path);
+  ierr = scanf ("%s", filename);
   if (ierr == EOF)
     Exit (INVALID_INPUT_ERROR, "Nothing entered for parameter file file path\n");
 }
 
 void
-init_parameter_file (char *file_path)
+init_parameter_file (char *filename)
 {
-  PAR_FILE_PTR = fopen (file_path, "r");
+  strcpy (PAR_FILE_PATH, filename);
+  PAR_FILE_PTR = fopen (filename, "r");
   if (!PAR_FILE_PTR)
-    Exit (FILE_OPEN_ERROR, "Could not find parameter file '%s'\n", file_path);
-  Log (" - Loaded parameter file '%s'\n", file_path);
+    Exit (FILE_OPEN_ERROR, "Could not find parameter file '%s'\n", filename);
+  Log (" - Loaded parameter file '%s'\n", filename);
+}
+
+void
+close_parameter_file (void)
+{
+  if (fclose (PAR_FILE_PTR))
+    Exit (FILE_CLOSE_ERROR, "Could not close parameter file '%s'\n", PAR_FILE_PATH);
 }
 
 void

@@ -28,8 +28,9 @@ main (int argc, char **argv)
 #endif
 
   start_time = get_time ();
+  init_logfile ();
 
-  Log ("\n--------------------------------------------------------------\n\n");
+  Log ("--------------------------------------------------------------\n\n");
   print_time ();
   Log ("\n--------------------------------------------------------------\n\n");
 
@@ -82,6 +83,7 @@ main (int argc, char **argv)
   print_duration (start_time, "Simulation completed in");
   Log ("\n--------------------------------------------------------------\n\n");
 
+  clean_up ();
 
 #ifdef MPI_ON
   MPI_Finalize ();

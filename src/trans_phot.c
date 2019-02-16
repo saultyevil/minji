@@ -21,7 +21,6 @@ trans_phot (Photon * p)
   double s_max, d_cell;
   double tau_cell, d_move;
 
-
   /*
    * Initialise the photon's current ds/tau to be 0 to indicate that this is
    * a new move. p->tau_scat is the optical depth a photon will encounter before
@@ -30,12 +29,7 @@ trans_phot (Photon * p)
 
   p->ds = 0;
   p->tau = 0;
-
-  if (!(strcmp (geo.grid_type, PLANE))) // TODO: remove this -- added for testing
-    p->tau_scat = random_tau () / geo.tau_max;
-  else
-    p->tau_scat = random_tau ();
-
+  p->tau_scat = random_tau ();
 
   /*
    * Calculate the total distance, s_max, the photon is required to traverse to
@@ -112,7 +106,7 @@ dist_to_edge (Photon * p, double *s_max)
   if (p->nx > 0)
     *s_max = (geo.x_max - p->x) / p->nx;
   else if (p->nx < 0)
-    *s_max = -p->x / p->nx;
+    *s_max = -1.0 * p->x / p->nx;
   else
     *s_max = 100 * geo.x_max;
 }

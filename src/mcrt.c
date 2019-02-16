@@ -25,12 +25,13 @@ mcrt_iterations (void)
   Photon *p;
 
   int n_scat = 0;
-
-  geo.trans_fudge = 1e-5 * (geo.x_max / geo.nx_cells);
+  int photon_remit = 0;
 
 #ifdef MPI_ON
   int mpi_n_scat;
 #endif
+
+  geo.trans_fudge = 1e-5 * (geo.x_max / geo.nx_cells);
 
   Log (" - Beginning MCRT iterations\n");
 
@@ -38,16 +39,19 @@ mcrt_iterations (void)
   if (mpi.proc == MASTER_MPI_PROC)
 #endif
 
-    mcrt_start = get_time ();
+  mcrt_start = get_time ();
 
   for (i = 0; i < geo.n_photons; i++)
   {
     p = &photon_bank[i];
 
+    Log ("P.x = %f\n", p->x);
     trans_phot (p);
-
+    Log ("P.x = %f\n", p->x);
     while (p->in_grid == TRUE)
     {
+      Log ("P.x = %f\n", p->x);
+
       xi = gsl_rand_num (0, 1);
       if (xi < geo.scat_albedo)
       {
@@ -58,18 +62,22 @@ mcrt_iterations (void)
       trans_phot (p);
 
       if (p->x < 0)
+      {
+        photon_remit++;
         define_photon (p, p->n);        // re-emit a new photon
-
+      }
     }
 
     if (i % config.progress_out_freq == 0 && i != 0)
-      Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i, (double) geo.n_photons, (double) i / geo.n_photons * 100);
+      Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i, (double) geo.n_photons,
+           (double) i / geo.n_photons * 100);
     else if (i == geo.n_photons - 1)
-      Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i, (double) geo.n_photons, (double) i / geo.n_photons * 100);
+      Log ("\t- Transported %1.2e out of %1.2e photons (%3.0f%%)\n", (double) i, (double) geo.n_photons,
+           (double) i / geo.n_photons * 100);
   }
 
 #ifdef MPI_ON
-  Log_verbose ("MPI OP: collecting n_scat from %i MPI processes\n", mpi.n_procs);
+  Log_verbose ("\t- MPI OP: collecting n_scat from %i MPI processes\n", mpi.n_procs);
   MPI_Reduce (&n_scat, &mpi_n_scat, 1, MPI_INT, MPI_SUM, MASTER_MPI_PROC, MPI_COMM);
   n_scat = mpi_n_scat;
   avg_n_scat = (double) n_scat / mpi.tot_n_photons;
@@ -81,7 +89,9 @@ mcrt_iterations (void)
   if (mpi.proc == MASTER_MPI_PROC)
 #endif
 
-    print_duration (mcrt_start, " - MCRT iterations completed in");
+  print_duration (mcrt_start, " - MCRT iterations completed in");
+
+  Log ("Photons re-emitted %e\n", (double) photon_remit);
 
   Log ("\n--------------------------------------------------------------\n\n");
   Log (" MCRT Summary:\n\n");

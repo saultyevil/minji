@@ -19,68 +19,10 @@
 
 
 void
-init_logfile (void)
+clean_up (void)
 {
-
-};
-
-void
-close_logfile (void)
-{
-
-}
-
-void
-Log (char *fmt, ...)
-{
-  va_list arg_list;
-
-  va_start (arg_list, fmt);
-#ifdef MPI_ON
-  if (mpi.proc == MASTER_MPI_PROC)
-#endif
-    vprintf (fmt, arg_list);
-  va_end (arg_list);
-}
-
-void
-Log_parallel (char *fmt, ...)
-{
-  va_list arg_list;
-
-  va_start (arg_list, fmt);
-  vprintf (fmt, arg_list);
-  va_end (arg_list);
-}
-
-void
-Log_verbose (char *fmt, ...)
-{
-  if (config.verbosity == TRUE)
-  {
-    va_list arg_list;
-
-    va_start (arg_list, fmt);
-#ifdef MPI_ON
-    if (mpi.proc == MASTER_MPI_PROC)
-#endif
-      vprintf (fmt, arg_list);
-    va_end (arg_list);
-  }
-}
-
-void
-Log_error (char *fmt, ...)
-{
-  va_list arg_list;
-
-  va_start (arg_list, fmt);
-#ifdef MPI_ON
-  printf ("PROC %i ", mpi.proc);
-#endif
-  printf ("ERROR: ");
-  vprintf (fmt, arg_list);
-  va_end (arg_list);
+  close_logfile ();
+  close_parameter_file ();
 }
 
 void

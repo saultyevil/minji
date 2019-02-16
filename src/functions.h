@@ -23,6 +23,17 @@ int init_default_pars (void);
 void init_grid (void);
 
 /*
+ * log.c
+ */
+
+void init_logfile (void);
+void close_logfile (void);
+void Log (char *fmt, ...);
+void Log_parallel (char *fmt, ...);
+void Log_verbose (char *fmt, ...);
+void Log_error (char *fmt, ...);
+
+/*
  * mcrt.c
  */
 
@@ -60,8 +71,9 @@ void get_int (char *par_name, int *value);
 void get_string (char *par_name, char *value);
 void get_optional_int (char *par_name, int *value);
 void get_optional_double (char *par_name, double *value);
-void find_par_file (char *file_path);
-void init_parameter_file (char *par_filepath);
+void find_par_file (char *filename);
+void init_parameter_file (char *filename);
+void close_parameter_file (void);
 
 /*
  * scatter.c
@@ -96,8 +108,5 @@ void trans_phot (Photon * p);
  * utility.c
  */
 
+void clean_up (void);
 void Exit (int error_code, char *fmt, ...);
-void Log (char *fmt, ...);
-void Log_parallel (char *fmt, ...);
-void Log_verbose (char *fmt, ...);
-void Log_error (char *fmt, ...);
