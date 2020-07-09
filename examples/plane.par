@@ -1,11 +1,11 @@
 ## 1d spherical model
 
 ## General parameters
-nphotons 1e6
+Geometry.nphotons 1e6
 
 ## Grid parameters
-ncells 10
-rmax  1.0
-tau_max 15.0
-scat_albedo 1.0
-rho_exp -2.0
+Geometry.ncells 10
+Geometry.rmax(m)  1.0
+Geometry.mass_density_exponent -2
+Geometry.mass_density_base(kg/m3) 1e-8
+Geometry.scat_albedo 1.0

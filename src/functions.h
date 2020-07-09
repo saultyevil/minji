@@ -15,8 +15,6 @@ void close_logfile(void);
 void mlog(char *fmt, ...);
 /* main.c */
 int main(int argc, char **argv);
-/* mcrt.c */
-void transport_photons(void);
 /* parse.c */
 char *get_command_line_arguments(int argc, char **argv);
 /* photon.c */
@@ -36,6 +34,7 @@ void print_time_elapsed(struct timespec start_time, char *message);
 struct timespec get_current_time(void);
 /* trans_phot.c */
 void move_photon_to_scatter(struct Photon p);
+void transport_photons(void);
 /* utility.c */
 void clean_up(void);
 void mabort(const int error_code, char *fmt, ...);

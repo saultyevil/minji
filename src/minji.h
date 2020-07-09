@@ -8,11 +8,11 @@
 *
 * *************************************************************************** */
 
+#include <stdbool.h>
+
 #define SUCCESS 0
 #define FAILURE 1
 #define LINELENGTH 128
-
-#include "log.h"
 
 #ifdef MPI_ON
 

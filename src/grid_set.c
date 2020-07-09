@@ -37,7 +37,7 @@ grid_get_parameters(void)
 
   // Mass density of the grid
   read_double("Geometry.mass_density_exponent", &Geometry.mass_density_exponent);
-  read_double("Geometry.mass_density_bottom(kg/m3)", &Geometry.mass_density_bottom);
+  read_double("Geometry.mass_density_base(kg/m3)", &Geometry.mass_density_bottom);
   if(Geometry.mass_density_bottom <= 0)
     mabort(FAILURE, "Invalid value for mass_density_bottom --> mass_density_bottom > 0");
 }

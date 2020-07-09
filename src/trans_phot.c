@@ -10,10 +10,8 @@
 
 #include <time.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 #include "minji.h"
-#include "fmt.h"
 #include "log.h"
 #include "functions.h"
 
@@ -25,7 +23,6 @@
 *
 * *************************************************************************** */
 
-// We only care about it traversing in one direction as it is 1d
 static double
 ds_to_escape(const struct Photon p)
 {
@@ -92,7 +89,7 @@ ds_to_cell_wall(struct Photon p)
   }
 
   if(ds < 0)
-  merror("trans_phot: p %i: dx < 0 (dx = %f)\n", p.n, ds);
+    merror("trans_phot: p %i: dx < 0 (dx = %f)\n", p.n, ds);
 
   return ds;
 }
@@ -126,6 +123,7 @@ move_photon_to_scatter(struct Photon p)
 
   double ds = 0;
   double tau = 0;
+  double ds_move = 0;
 
   while(tau < tau_scat && ds < smax)
   {
@@ -137,7 +135,7 @@ move_photon_to_scatter(struct Photon p)
      */
 
     double dcell = ds_to_cell_wall(p);
-    double tau_cell = GridCells[p.icell].opac * GridCells[p.icell].dens * d_cell;
+    double tau_cell = GridCells[p.icell].mass_density * dcell;
 
     /*
      * If the total optical depth PLUS the optical depth experience by the
@@ -148,14 +146,13 @@ move_photon_to_scatter(struct Photon p)
      * while loop will iterate again.
      */
 
-    double ds_scat;
     if((tau + tau_cell) >= tau_scat)
     {
-      ds_scat = (tau_scat - tau) / (GridCells[p.icell].opac * GridCells[p.icell].dens);
+      ds_move = (tau_scat - tau) / (GridCells[p.icell].mass_density);
     }
     else
     {
-      ds_scat = dcell;
+      ds_move = dcell;
     }
 
     /*
@@ -163,9 +160,9 @@ move_photon_to_scatter(struct Photon p)
      * and the position of the photon is updated
      */
 
-    ds += ds_scat;
+    ds += ds_move;
     tau += tau_cell;
-    traverse_phot_ds(p, ds_scat);
+    move_photon(&p, ds_move);
   }
 
   /*
@@ -181,7 +178,7 @@ move_photon_to_scatter(struct Photon p)
   }
   else
   {
-    traverse_phot_ds(p, ds_scat);
+    move_photon(&p, ds_move);
   }
 }
 

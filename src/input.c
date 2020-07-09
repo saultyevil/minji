@@ -31,7 +31,7 @@ query_for_parameter_file(char *filename)
 {
   printf("Please input the file path to the parameter file: ");
   const int err = scanf("%s", filename);
-  if (!err)
+  if(!err)
     mabort(FAILURE, "Nothing entered for parameter file\n");
 }
 
@@ -47,8 +47,10 @@ extern void
 open_parameter_file(char *filename)
 {
   pffp = fopen(filename, "r");
-  if (!pffp)
+
+  if(!pffp)
     mabort(FAILURE, "Could not find parameter file: %s\n", filename);
+
   mlog("Loaded parameter file '%s'\n", filename);
 }
 
@@ -63,7 +65,7 @@ open_parameter_file(char *filename)
 void
 close_parameter_file(void)
 {
-  if (fclose(pffp))
+  if(fclose(pffp))
     mlog("Could not close paramater file");  // TODO this should be an error
 }
 
@@ -86,23 +88,23 @@ read_double(char *parameter, double *value)
   int line_num = 0;
   bool found = false;
 
-  while (fgets(line, LINELENGTH, pffp) != NULL)
+  while(fgets(line, LINELENGTH, pffp) != NULL)
   {
     line_num++;
-    if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
+    if(line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
 
-    if (sscanf(line, "%s %s", name, xvalue) != 2)
+    if(sscanf(line, "%s %s", name, xvalue) != 2)
       mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
 
-    if (strcmp(parameter, name) == 0)
+    if(strcmp(parameter, name) == 0)
     {
       *value = strtod(xvalue, NULL);
       found = true;
     }
   }
 
-  if (found == false)
+  if(found == false)
     mabort(FAILURE, "Unable to find parameter %s\n", parameter);
 }
 
@@ -125,23 +127,23 @@ read_integer(char *parameter, int *value)
   int line_num = 0;
   bool found_par = false;
 
-  while (fgets(line, LINELENGTH, pffp) != NULL)
+  while(fgets(line, LINELENGTH, pffp) != NULL)
   {
     line_num++;
-    if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
+    if(line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
 
-    if (sscanf(line, "%s %s", name, xvalue) != 2)
+    if(sscanf(line, "%s %s", name, xvalue) != 2)
       mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
 
-    if (strcmp(parameter, name) == 0)
+    if(strcmp(parameter, name) == 0)
     {
       *value = (int) strtol(xvalue, NULL, 10);
       found_par = true;
     }
   }
 
-  if (!found_par)
+  if(!found_par)
     mabort(FAILURE, "Unable to find parameter %s\n", parameter);
 }
 
@@ -164,22 +166,22 @@ get_string(char *parameter, char *value)
   int line_num = 0;
   bool found_par = false;
 
-  while (fgets(line, LINELENGTH, pffp) != NULL)
+  while(fgets(line, LINELENGTH, pffp) != NULL)
   {
     line_num++;
-    if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
+    if(line[0] == '#' || line[0] == '\r' || line[0] == '\n')
       continue;
 
-    if (sscanf(line, "%s %s", name, xvalue) != 2)
+    if(sscanf(line, "%s %s", name, xvalue) != 2)
       mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
 
-    if (strcmp(parameter, name) == 0)
+    if(strcmp(parameter, name) == 0)
     {
       strcpy (value, xvalue);
       found_par = true;
     }
   }
 
-  if (!found_par)
+  if(!found_par)
     mabort(FAILURE, "Unable to find parameter %s\n", parameter);
 }

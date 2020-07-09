@@ -83,7 +83,7 @@ init_photons(void)
   mlog("Initialising photon structure\n");
 
   double nphotons;
-  read_double("n_photons", &nphotons);
+  read_double("Geometry.nphotons", &nphotons);
   if((Geometry.nphotons = (int) nphotons) <= 0)
     mabort(FAILURE, "Invalid value for n_photons: n_photons > 0\n");
 
