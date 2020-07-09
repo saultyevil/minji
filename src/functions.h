@@ -1,112 +1,41 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
- *
- * @details
- *
- * ************************************************************************** */
-
-/*
- * default_pars.c
- */
-
-int init_default_pars (void);
-
-/*
- * grid_set.c
- */
-
-void init_grid (void);
-
-/*
- * log.c
- */
-
-void init_logfile (void);
-void close_logfile (void);
-void Log (char *fmt, ...);
-void Log_parallel (char *fmt, ...);
-void Log_verbose (char *fmt, ...);
-void Log_error (char *fmt, ...);
-
-/*
- * mcrt.c
- */
-
-int mcrt_iterations (void);
-
-/*
- * output.c
- */
-
-void write_grid_to_file (char *filename);
-
-/*
- * photon.c
- */
-
-void define_photon (Photon * p, int photon_number);
-void init_photons (void);
-void traverse_phot_ds (Photon * p, double ds);
-
-/*
- * random.c
- */
-
-double gsl_rand_num (double min, double max);
-void init_gsl_seed (void);
-double random_tau (void);
-void random_theta_phi (double *theta, double *phi);
-
-/*
- * read_pars.c
- */
-
-void get_double (char *par_name, double *value);
-void get_int (char *par_name, int *value);
-void get_string (char *par_name, char *value);
-void get_optional_int (char *par_name, int *value);
-void get_optional_double (char *par_name, double *value);
-void find_par_file (char *filename);
-void init_parameter_file (char *filename);
-void close_parameter_file (void);
-
-/*
- * scatter.c
- */
-
-void scatter_phot (Photon * p);
-
-/*
- * setup.c
- */
-
-void init_geo (void);
-
-
-/*
- * time.c
- */
-
-struct timespec get_time (void);
-void print_time (void);
-void print_duration (struct timespec start_time, char *message);
-
-/*
- * trans_phot.c
- */
-
-void ds_to_cell_wall (Photon *p, double *ds);
-void dist_to_edge (Photon * p, double *s_max);
-void trans_phot (Photon * p);
-
-/*
- * utility.c
- */
-
-void clean_up (void);
-void Exit (int error_code, char *fmt, ...);
+/* grid_set.c */
+void init_grid(void);
+/* init.c */
+void init_minji(void);
+/* input.c */
+void query_for_parameter_file(char *filename);
+void open_parameter_file(char *filename);
+void close_parameter_file(void);
+void read_double(char *parameter, double *value);
+void read_integer(char *parameter, int *value);
+void get_string(char *parameter, char *value);
+/* log.c */
+void init_logfile(void);
+void close_logfile(void);
+void mlog(char *fmt, ...);
+/* main.c */
+int main(int argc, char **argv);
+/* mcrt.c */
+void transport_photons(void);
+/* parse.c */
+char *get_command_line_arguments(int argc, char **argv);
+/* photon.c */
+void move_photon(struct Photon *p, double ds);
+void create_photon(struct Photon *p, int number);
+void init_photons(void);
+/* random.c */
+void init_gsl_seed(void);
+double gsl_rand_num(double min, double max);
+void get_random_optical_depth(double *const tau);
+void get_random_theta_phi_direction(double *const theta, double *const phi);
+/* scatter.c */
+void scatter_photon(struct Photon *p);
+/* time.c */
+void print_current_time(void);
+void print_time_elapsed(struct timespec start_time, char *message);
+struct timespec get_current_time(void);
+/* trans_phot.c */
+void move_photon_to_scatter(struct Photon p);
+/* utility.c */
+void clean_up(void);
+void mabort(const int error_code, char *fmt, ...);

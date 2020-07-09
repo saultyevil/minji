@@ -1,51 +1,65 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
+/* ************************************************************************** */
+/**
+ * @file     time.c
+ * @author   Edward Parkinson
+ * @brief    Functions for various timing operations.
  *
  * @details
  *
  * ************************************************************************** */
 
-
 #include <time.h>
 
 #include "minji.h"
+#include "functions.h"
 
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
-void
-print_time (void)
+extern void
+print_current_time(void)
 {
-  char *c_time_string;
-  time_t current_time;
-
-  current_time = time (NULL);
-  c_time_string = ctime (&current_time);
-
-  Log ("Current time: %s", c_time_string);
+  const time_t current_time = time(NULL);
+  const char *const c_time_string = ctime(&current_time);
+  mlog("Current time: %s", c_time_string);
 }
 
-void
-print_duration (struct timespec start_time, char *message)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern void
+print_time_elapsed(struct timespec start_time, char *message)
 {
-  double td;
   struct timespec end_time;
 
-  clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &end_time);
-  td = (end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
-  Log ("%s ", message);
-  Log ("%f seconds\n", td);
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_time);
+  const double td = (double) ((end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec)) / 1e9;
+  mlog("%s %f seconds\n", message, td);
 }
 
-struct timespec
-get_time (void)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern struct timespec
+get_current_time(void)
 {
   struct timespec time;
-
-  clock_gettime (CLOCK_PROCESS_CPUTIME_ID, &time);
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time);
 
   return time;
 }

@@ -1,89 +1,108 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
- *
- * @details
- *
- * ************************************************************************** */
-
+/* ************************************************************************** */
+/**
+* @file    grid_set.c
+* @author  Edward Parkinson
+* @brief   Contains the functions for initializing the simulation grid.
+*
+* @details
+*
+* *************************************************************************** */
 
 #include <math.h>
-#include <string.h>
 #include <stdlib.h>
 
 #include "minji.h"
+#include "functions.h"
 
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
-void
-get_grid_params (void)
+static void
+grid_get_parameters(void)
 {
-  get_int (N_CELLS_STR, &geo.nx_cells);
-  if (geo.nx_cells <= 0)
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for nx_cells: nx_cells > 0\n");
+  // Number of grid cells
+  read_integer("Geometry.ncells", &Geometry.ncells);
+  if(Geometry.ncells <= 0)
+    mabort(FAILURE, "Invalid value for nx_cells: nx_cells > 0\n");
 
-  get_double (X_MAX_STR, &geo.x_max);
-  if (geo.x_max < 0)
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for x_max: x_max >= 0");
+  // Spherical extent of the simulation grid
+  read_double("Geometry.rmax(m)", &Geometry.rmax);
+  if(Geometry.rmax <= 0)
+    mabort(FAILURE, "Invalid value for rmax --> rmax > 0");
 
-  get_double (TAU_MAX_STR, &geo.tau_max);
-  if (geo.tau_max < 0)
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for tau_max: tau_max >= 0\n");
-
-  get_double (RHO_EXP_STR, &geo.rho_exp);
-
-  geo.hx = geo.x_max / geo.nx_cells;
+  // Mass density of the grid
+  read_double("Geometry.mass_density_exponent", &Geometry.mass_density_exponent);
+  read_double("Geometry.mass_density_bottom(kg/m3)", &Geometry.mass_density_bottom);
+  if(Geometry.mass_density_bottom <= 0)
+    mabort(FAILURE, "Invalid value for mass_density_bottom --> mass_density_bottom > 0");
 }
 
-void
-allocate_1d_grid (void)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+static void
+grid_malloc(void)
 {
-  long mem_req;
-
-  mem_req = geo.nx_cells * sizeof (*grid);
-
-  if (!(grid = calloc (geo.nx_cells, sizeof (*grid))))
-    Exit (MEM_ALLOC_ERROR, "Could not allocate memory for grid of size %li\n", mem_req);
-
-  Log ("\t\t- Allocated %1.2e bytes for %1.2e grid cells\n", (double) mem_req, (double) geo.nx_cells);
+  const int NGHOST = 2;
+  const long memory_requirement = Geometry.ncells * (long) sizeof(struct GridCell);
+  GridCells = calloc(Geometry.ncells + NGHOST, sizeof(struct GridCell));
+  if(!GridCells)
+  {
+    mabort(FAILURE, "Unable to allocate %d bytes for simulation grid of %d", memory_requirement, Geometry.ncells);
+  }
+  else  // else is used here to avoid compiler warnings
+  {
+    mlog("Allocated %1.2e bytes for %1.2e grid cells\n", (double) memory_requirement, (double) Geometry.ncells);
+  }
 }
 
-void
-init_grid (void)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern void
+init_grid(void)
 {
-  int i;
-  double tau_escape;
+  grid_get_parameters();
+  grid_malloc();
 
-  get_grid_params ();
-  allocate_1d_grid ();
-
-  Log_verbose ("\t\t- Creating location of grid points\n");
-  for (i = 0; i < geo.nx_cells; i++)
+  double dr;
+  if(Geometry.grid_type == GRID_LINEAR)
   {
-    grid[i].n = i;
-    grid[i].x = (i + 1) * geo.hx;
+    dr = Geometry.rmax / Geometry.ncells;
+    mlog("Using linear grid spacing with dr %e\n", dr);
+  }
+  else if(Geometry.grid_type == GRID_LOGARITHMIC)
+  {
+    mlog("Using logarithmic grid spacing\n");
+  }
+  else
+  {
+    mabort(FAILURE, "Unknown grid type %d\n", Geometry.grid_type);
   }
 
-  tau_escape = 0.0;
-  Log_verbose ("\t\t- Creating opacity and density grid\n");
-  for (i = 0; i < geo.nx_cells; i++)
+  for(int i = 0; i < Geometry.ncells; ++i)
   {
-    if (!(strcmp (geo.grid_type, PLANE)))
+    if(Geometry.grid_type == GRID_LOGARITHMIC)
     {
-      grid[i].dens = 1.0;
-      grid[i].opac = geo.tau_max / geo.nx_cells;  // TODO: remove temporary opacity
-      tau_escape += grid[i].opac * grid[i].dens;
+      dr = 1.0;
     }
-    else if (!(strcmp (geo.grid_type, SPHERICAL)))
-    {
-      Exit (NOT_IMPLEMENTED_ERROR, "1d spherical grid isn't implemented yet\n");
-    }
-  }
 
-  Log ("\t\t- Optical depth to escape = %f\n", tau_escape);
-  Log ("\t\t- Writing grid to file\n");
-  write_grid_to_file (filenames.grid_output);
+    GridCells[i].n = i;
+    GridCells[i].r = i * dr;
+  }
 }

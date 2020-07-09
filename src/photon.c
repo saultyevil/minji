@@ -1,110 +1,101 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
- *
- * @details
- *
- * ************************************************************************** */
-
+/* ************************************************************************** */
+/**
+* @file    photon.c
+* @author  Edward Parkinson
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "minji.h"
+#include "log.h"
+#include "functions.h"
 
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
-void
-traverse_phot_ds (Photon * p, double ds)
+extern void
+move_photon(struct Photon *p, double ds)
 {
   p->x += ds * p->nx;
   p->y += ds * p->ny;
   p->z += ds * p->nz;
-  p->icell = (int) (p->x * geo.nx_cells / geo.x_max);
+  p->icell = (int) (p->x * Geometry.ncells / Geometry.rmax);
 }
 
-void
-define_photon (Photon * p, int number)
-{
-  double theta, phi;
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
+extern void
+create_photon(struct Photon *p, int number)
+{
   p->n = number;
-  p->in_grid = TRUE;
-  p->w = p->w_0 = geo.rad_lum / geo.n_photons;
+  p->in_grid = true;
+  p->w = 1.0;
 
   /*
    * Generate a random theta and phi direction and update the x, y and z
    * directions
    */
 
-  random_theta_phi (&theta, &phi);
-  p->nx = sin (theta) * cos (phi);
-  p->ny = sin (theta) * sin (phi);
-  p->nz = cos (theta);
+  double theta, phi;
+  get_random_theta_phi_direction(&theta, &phi);
+  p->nx = sin(theta) * cos(phi);
+  p->ny = sin(theta) * sin(phi);
+  p->nz = cos(theta);
 
   /*
    * Set photons to be emitted from the origin, i.e. the first cell
    */
 
-  p->x = geo.trans_fudge;
-  p->y = geo.trans_fudge;
-  p->z = geo.trans_fudge;
-  p->icell = (int) (p->x * geo.nx_cells / geo.x_max);
+  p->x = 0;
+  p->y = 0;
+  p->z = 0;
+  p->icell = (int) (p->x * Geometry.ncells / Geometry.rmax);
 }
 
-void
-init_photons (void)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern void
+init_photons(void)
 {
-  int i;
-  double n_photons = geo.n_photons;
-  double photon_buff_size;
+  mlog("Initialising photon structure\n");
 
-  Log ("\t- Initialising photon structure\n");
+  double nphotons;
+  read_double("n_photons", &nphotons);
+  if((Geometry.nphotons = (int) nphotons) <= 0)
+    mabort(FAILURE, "Invalid value for n_photons: n_photons > 0\n");
 
-  /*
-   * Read in the number of photon_main from file and check that it is a sensible
-   * number. Even though N_PHOTONS is an int, read in n_photons as a double
-   * to make input easier as it allows input such as 1e6
-   */
+  unsigned long memory = Geometry.nphotons * sizeof(struct Photon);
 
-  get_double ("n_photons", &n_photons);
-  if ((geo.n_photons = (int) n_photons) <= 0)
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for n_photons: n_photons > 0\n");
+  if(!(Photons = calloc(Geometry.nphotons, sizeof(struct Photon))))
+    mabort(FAILURE, "init_photons: Couldn't allocate %f bytes for %1.2e photons\n", memory, (double) Geometry.nphotons);
 
-  get_double ("rad_lum", &geo.rad_lum);
-  if (geo.rad_lum <= 0)
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for rad_lum: rad_lum > 0\n");
+  mlog("Allocated %1.2e bytes for %1.2e photons\n", memory, (double) Geometry.nphotons);
 
-#ifdef MPI_ON
-  config.progress_out_freq /= mpi.n_procs;
-  mpi.tot_n_photons = geo.n_photons;
-  geo.n_photons /= mpi.n_procs;
-#endif
-
-  /*
-   * Allocate storage for all the photon_main and define each photon. If enough
-   * space cannot be allocated, then this should be reported and the program
-   * will exit
-   */
-
-  Log ("\t\t- Defining %1.2e photons in total\n", n_photons);
-
-#ifdef MPI_ON
-  Log ("\t\t- Allocating %1.2e photons per process\n", (double) geo.n_photons);
-#endif
-
-  photon_buff_size = geo.n_photons * sizeof (*photon_bank);
-
-  if (!(photon_bank = calloc (geo.n_photons, sizeof (*photon_bank))))
-    Exit (MEM_ALLOC_ERROR, "init_photons: Couldn't allocate %f bytes for %1.2e photons\n", photon_buff_size, (double) geo.n_photons);
-  Log ("\t\t- Allocated %1.2e bytes for %1.2e photons\n", photon_buff_size, (double) geo.n_photons);
-
-  Log ("\t\t- Generating photons\n");
-  for (i = 0; i < geo.n_photons; i++)
-    define_photon (&photon_bank[i], i);
+  for(int i = 0; i < Geometry.nphotons; i++)
+    create_photon(&Photons[i], i);
 }
 
 

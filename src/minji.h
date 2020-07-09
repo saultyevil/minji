@@ -1,126 +1,69 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
- *
- * @details
- *
- * ************************************************************************** */
+/* ************************************************************************** */
+/**
+* @file    minji.h
+* @author  Edward Parkinson
+* @brief   The main header file for the program.
+*
+* @details
+*
+* *************************************************************************** */
 
-#define TRUE 1
-#define FALSE 0
 #define SUCCESS 0
 #define FAILURE 1
-#define LINE_LEN 256
+#define LINELENGTH 128
 
-#include "parameters.h"
-
-/*
- * Parameters and structures for when MPI is enabled
- */
+#include "log.h"
 
 #ifdef MPI_ON
 
 #include <mpi.h>
 
-#define MPI_COMM MPI_COMM_WORLD
-#define MASTER_MPI_PROC 0
+#define MPI_MAIN_COMM MPI_COMM_WORLD
+#define MPI_MAIN 0
 
-typedef struct MPI_Config
+struct MPIConfigSettings
 {
-  int proc;
-  int n_procs;
-  int tot_n_photons;
-} MPI_Config;
-
-MPI_Config mpi;
-
+  int nprocesses;
+  int nphotons;
+  int current_process;
+} MPIConfig;
 #endif
 
-/*
- * Structs and enumerators for the simulation
- */
-
-typedef struct Config
+// Structure to contain the global geometry configuration
+struct GeometrySettings
 {
-  int verbosity;
-  int progress_out_freq;
-} Config;
+  int ncells;
+  int nphotons;
+  double rmax;
+  double mass_density_bottom;
+  double mass_density_exponent;
+  double smax_transport_frac;
+  double pushthrough_distance;
+  double scatter_albedo;
 
-Config config;
+  enum GridType
+  {
+    GRID_LINEAR,
+    GRID_LOGARITHMIC
+  } grid_type;
 
-typedef struct Files
-{
-  char grid_output[LINE_LEN];
-} Files;
-
-Files filenames;
-
-enum Errors
-{
-  MEM_ALLOC_ERROR = 1,
-  INVALID_PARAMETER_ERROR,
-  INVALID_INPUT_ERROR,
-  NOT_IMPLEMENTED_ERROR,
-  FILE_OPEN_ERROR,
-  FILE_CLOSE_ERROR,
-  GSL_RNG_ERROR,
-  PAR_FILE_SYNTAX_ERROR,
-};
-
-/*
- * The structure to hold various geometry parameters and other related macros
- */
-
-#define PLANE "plane"
-#define SPHERICAL "spherical"
-
-typedef struct Geometry
-{
-  char grid_type[LINE_LEN];
-  int nx_cells;
-  int n_photons;
-  double trans_fudge;
-  double rad_lum;
-  double hx;
-  double x_max;
-  double s_max_frac;
-  double rho_exp;
-  double tau_max;
-  double scat_albedo;
 } Geometry;
 
-Geometry geo;
-
-typedef struct Grid
+// Structure to define an individual grid cell
+struct GridCell
 {
   int n;
-  double x;
-  double opac;
-  double dens;
-} Grid;
+  double r;
+  double mass_density;
+} *GridCells;  // Array for all the grid cells
 
-Grid *grid;
-
-/*
- * The struct for photons - note that photon_bank is an array of photons.
- */
-
-typedef struct Photon
+// Structure to define an individual photon
+struct Photon
 {
+  bool in_grid;
   int n;
-  int in_grid;
   int icell;
-  double ds;
   double x, y, z;
   double nx, ny, nz;
-  double tau, tau_scat;
-  double w, w_0;
-} Photon;
-
-Photon *photon_bank;
-
-#include "functions.h"
+  double w, w0;
+} *Photons;  // Array for all the photons

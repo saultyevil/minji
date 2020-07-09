@@ -1,92 +1,67 @@
-/* ***************************************************************************
-*
-* @file
-*
-* @author
-*
-* @brief
+/* ************************************************************************** */
+/**
+* @file    main.c
+* @author  Edward Parkinson
+* @brief   Contains the main function of the program.
 *
 * @details
 *
- * ************************************************************************** */
+* *************************************************************************** */
 
 #include <time.h>
-#include <string.h>
 
 #include "minji.h"
+#include "fmt.h"
+#include "functions.h"
+
+/* ************************************************************************** */
+/**
+* @brief   The main function of the program.
+*
+* @details
+*
+* *************************************************************************** */
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
-  struct timespec start_time;
-  char par_file_path[LINE_LEN];
-
 #ifdef MPI_ON
-  MPI_Init (&argc, &argv);
-  MPI_Comm_rank (MPI_COMM, &mpi.proc);
-  MPI_Comm_size (MPI_COMM, &mpi.n_procs);
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_MAIN_COMM, &MPIConfig.current_process);
+  MPI_Comm_size(MPI_MAIN_COMM, &MPIConfig.nprocesses);
 #endif
 
-  start_time = get_time ();
-  init_logfile ();
+  init_logfile();
+  struct timespec start_time = get_current_time();
+  print_current_time();
+  mlog("\n%s\n\n", FMT_SEPARATOR);
 
-  Log ("--------------------------------------------------------------\n\n");
-  print_time ();
-  Log ("\n--------------------------------------------------------------\n\n");
-
-  /*
-   * Begin the process of reading in the parameters from file:
-   *  - If no arguments to the program are provided, the user will be prompted
-   *    to input a file path to find the parameter file and then parameters
-   *    will be read in from the file.
-   *  - If 1 argument is provided, the program will attempt to load parameters
-   *    from the provided file path from the argument list.
-   *  - If more than 1 argument is provided, the program will exit.
-   */
-
-  if (argc == 1)
-    find_par_file (par_file_path);
-  else if (argc == 2)
-    strcpy (par_file_path, argv[1]);
-  else
-    Exit (INVALID_INPUT_ERROR, "Too many arguments provided\n");
-
-  init_parameter_file (par_file_path);
-
-  get_optional_int ("verbosity", &config.verbosity);
-  if ((config.verbosity != FALSE) && (config.verbosity != TRUE))
-    Exit (INVALID_PARAMETER_ERROR, "Invalid value for verbosity: verbosity should be 0 or 1\n");
+  char *parameter_file_path;
+  parameter_file_path = get_command_line_arguments(argc, argv);
+  open_parameter_file(parameter_file_path);
 
   /*
    * Begin the process of initialising all of the simulation components such
    * as the photons and the the density grid
    */
 
-  Log (" - Beginning initialisation routines\n");
+  mlog("Beginning initialisation routines\n");
+  init_minji();
+  init_grid();
+  init_photons();
 
-  init_default_pars ();
-  init_gsl_seed ();
-  init_geo ();
-  init_photons ();
-
-  /*
-   * Begin the MCRT iterations
-   */
-
-  mcrt_iterations ();
+  transport_photons();
 
   /*
    * Indicate the end of the simulation and clean up
    */
 
-  Log ("\n--------------------------------------------------------------\n\n");
-  print_duration (start_time, "Simulation completed in");
-  Log ("\n--------------------------------------------------------------\n\n");
-
-  clean_up ();
+  mlog("\n%s\n\n", FMT_SEPARATOR);
+  print_time_elapsed(start_time, "Simulation completed in: ");
+  clean_up();
 
 #ifdef MPI_ON
-  MPI_Finalize ();
+  MPI_Finalize();
 #endif
 
   return SUCCESS;

@@ -1,56 +1,133 @@
-/* ***************************************************************************
- *
- * @file
- *
- * @author
- *
- * @brief
- *
- * @details
- *
- * ************************************************************************** */
+/* ************************************************************************** */
+/**
+* @file    trans_phot.c
+* @author  Edward Parkinson
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
-#include <string.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 #include "minji.h"
+#include "fmt.h"
+#include "log.h"
+#include "functions.h"
 
-void
-trans_phot (Photon * p)
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+// We only care about it traversing in one direction as it is 1d
+static double
+ds_to_escape(const struct Photon p)
 {
-  double ds_max_frac;
-  double s_max, d_cell;
-  double tau_cell, d_move;
+  double smax;
 
-  /*
-   * Initialise the photon's current ds/tau to be 0 to indicate that this is
-   * a new move. p->tau_scat is the optical depth a photon will encounter before
-   * it is scattered
-   */
+  if(p.nx > 0)
+  {
+    smax = (Geometry.rmax - p.x) / p.nx;
+  }
+  else if(p.nx < 0)
+  {
+    smax = -1.0 * p.x / p.nx;
+  }
+  else
+  {
+    smax = 100 * Geometry.rmax;
+  }
 
-  p->ds = 0;
-  p->tau = 0;
-  p->tau_scat = random_tau ();
+  return smax;
+}
+
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+/*
+ * If the distance to the next cell wall is small, then we will consider the
+ * photon to be in the next cell wall, move it into the next cell and then
+ * calculate dx for the new cell
+ */
+
+static double
+ds_to_cell_wall(struct Photon p)
+{
+  double ds;
+
+  if(p.nx > 0)
+  {
+    ds = (GridCells[p.icell].r - p.x) / p.nx;
+    if(ds < Geometry.pushthrough_distance)
+    {
+      p.x = GridCells[p.icell].r;
+      p.icell += 1;
+      ds = (GridCells[p.icell].r - p.x) / p.nx;
+    }
+  }
+  else if(p.nx < 0)
+  {
+    ds = (GridCells[p.icell - 1].r - p.x) / p.nx;
+    if(ds < Geometry.pushthrough_distance)
+    {
+      p.x = GridCells[p.icell - 1].r;
+      p.icell -= 1;
+      ds = (GridCells[p.icell - 1].r - p.x) / p.nx;
+    }
+  }
+  else
+  {
+    ds = 100 * Geometry.rmax;
+  }
+
+  if(ds < 0)
+  merror("trans_phot: p %i: dx < 0 (dx = %f)\n", p.n, ds);
+
+  return ds;
+}
+
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern void
+move_photon_to_scatter(struct Photon p)
+{
+  double tau_scat;
+  get_random_optical_depth(&tau_scat);
 
   /*
    * Calculate the total distance, s_max, the photon is required to traverse to
    * escape from the atmosphere. If s_max is very small, we will consider that
-   * the photon is already at the edge of the grid and exit
+   * the photon is already at the edge of the simulation grid and exit
    */
 
-  dist_to_edge (p, &s_max);
-  if (s_max < geo.trans_fudge)
+  double smax = ds_to_escape(p) * Geometry.smax_transport_frac;
+  if(smax < Geometry.pushthrough_distance)
   {
-    p->in_grid = FALSE;
+    p.in_grid = false;
     return;
   }
 
-  /*
-   * Set the total s_max a photon is allowed to move
-   */
+  double ds = 0;
+  double tau = 0;
 
-  ds_max_frac = geo.s_max_frac * s_max;
-
-  while (p->tau < p->tau_scat && p->ds < ds_max_frac)
+  while(tau < tau_scat && ds < smax)
   {
     /*
      * Figure out the distance to the nearest cell wall, then calculate the
@@ -59,8 +136,8 @@ trans_phot (Photon * p)
      *      dtau = rho * kappa * ds
      */
 
-    ds_to_cell_wall (p, &d_cell);
-    tau_cell = grid[p->icell].opac * grid[p->icell].dens * d_cell;
+    double dcell = ds_to_cell_wall(p);
+    double tau_cell = GridCells[p.icell].opac * GridCells[p.icell].dens * d_cell;
 
     /*
      * If the total optical depth PLUS the optical depth experience by the
@@ -71,19 +148,24 @@ trans_phot (Photon * p)
      * while loop will iterate again.
      */
 
-    if ((p->tau + tau_cell) >= p->tau_scat)
-      d_move = (p->tau_scat - p->tau) / (grid[p->icell].opac * grid[p->icell].dens);
+    double ds_scat;
+    if((tau + tau_cell) >= tau_scat)
+    {
+      ds_scat = (tau_scat - tau) / (GridCells[p.icell].opac * GridCells[p.icell].dens);
+    }
     else
-      d_move = d_cell;
+    {
+      ds_scat = dcell;
+    }
 
     /*
      * The running totals for optical depth and ds moved are now incremented
      * and the position of the photon is updated
      */
 
-    p->ds += d_move;
-    p->tau += tau_cell;
-    traverse_phot_ds (p, d_move);
+    ds += ds_scat;
+    tau += tau_cell;
+    traverse_phot_ds(p, ds_scat);
   }
 
   /*
@@ -93,60 +175,47 @@ trans_phot (Photon * p)
    * the photon's position is updated
    */
 
-  if (p->ds >= ds_max_frac)
-    p->in_grid = FALSE;
-  else
-    traverse_phot_ds (p, d_move);
-}
-
-// We only care about it traversing in one direction as it is 1d
-void
-dist_to_edge (Photon * p, double *s_max)
-{
-  if (p->nx > 0)
-    *s_max = (geo.x_max - p->x) / p->nx;
-  else if (p->nx < 0)
-    *s_max = -1.0 * p->x / p->nx;
-  else
-    *s_max = 100 * geo.x_max;
-}
-
-/*
- * If the distance to the next cell wall is small, then we will consider the
- * photon to be in the next cell wall, move it into the next cell and then
- * calculate dx for the new cell
- */
-
-void
-ds_to_cell_wall (Photon *p, double *ds)
-{
-  double dx;
-
-  if (p->nx > 0)
+  if(ds >= smax)
   {
-    dx = (grid[p->icell].x - p->x) / p->nx;
-    if (dx < geo.trans_fudge)
-    {
-      p->x = grid[p->icell].x;
-      p->icell += 1;
-      dx = (grid[p->icell].x - p->x) / p->nx;
-    }
-  }
-  else if (p->nx < 0)
-  {
-    dx = (grid[p->icell - 1].x - p->x) / p->nx;
-    if (dx < geo.trans_fudge)
-    {
-      p->x = grid[p->icell - 1].x;
-      p->icell -= 1;
-      dx = (grid[p->icell - 1].x - p->x) / p->nx;
-    }
+    p.in_grid = false;
   }
   else
-    dx = 100 * geo.x_max;
+  {
+    traverse_phot_ds(p, ds_scat);
+  }
+}
 
-  if (dx < 0)
-    Log_error ("trans_phot: p %i: dx < 0 (dx = %f)\n", p->n, dx);
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
 
-  *ds = dx;
+extern void
+transport_photons(void)
+{
+  int nscat = 0;
+
+  mlog("Beginning MCRT iterations\n");
+  const struct timespec mcrt_start = get_current_time();
+
+  for(int i = 0; i < Geometry.nphotons; i++)
+  {
+    struct Photon p = Photons[i];
+
+    move_photon_to_scatter(p);
+    while(p.in_grid)
+    {
+      double xi = gsl_rand_num(0, 1);
+      if(xi < Geometry.scatter_albedo)
+      {
+        scatter_photon(&p);
+        nscat += 1;
+      }
+
+      move_photon_to_scatter(p);
+    }
+  }
 }
