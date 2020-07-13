@@ -14,7 +14,6 @@
 #include <stdbool.h>
 
 #include "minji.h"
-#include "functions.h"
 
 static FILE *pffp;
 
@@ -32,7 +31,7 @@ query_for_parameter_file(char *filename)
   printf("Please input the file path to the parameter file: ");
   const int err = scanf("%s", filename);
   if(!err)
-    mabort(FAILURE, "Nothing entered for parameter file\n");
+    mabort(FAILURE, "Nothing entered for parameter file");
 }
 
 /* ************************************************************************** */
@@ -49,7 +48,7 @@ open_parameter_file(char *filename)
   pffp = fopen(filename, "r");
 
   if(!pffp)
-    mabort(FAILURE, "Could not find parameter file: %s\n", filename);
+    mabort(FAILURE, "Could not find parameter file: %s", filename);
 
   mlog("Loaded parameter file '%s'\n", filename);
 }
@@ -95,7 +94,7 @@ read_double(char *parameter, double *value)
       continue;
 
     if(sscanf(line, "%s %s", name, xvalue) != 2)
-      mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
+      mabort(FAILURE, "Syntax error on line %i in parameter file", line_num);
 
     if(strcmp(parameter, name) == 0)
     {
@@ -105,7 +104,7 @@ read_double(char *parameter, double *value)
   }
 
   if(found == false)
-    mabort(FAILURE, "Unable to find parameter %s\n", parameter);
+    mabort(FAILURE, "Unable to find parameter %s", parameter);
 }
 
 /* ************************************************************************** */
@@ -134,7 +133,7 @@ read_integer(char *parameter, int *value)
       continue;
 
     if(sscanf(line, "%s %s", name, xvalue) != 2)
-      mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
+      mabort(FAILURE, "Syntax error on line %i in parameter file", line_num);
 
     if(strcmp(parameter, name) == 0)
     {
@@ -144,7 +143,7 @@ read_integer(char *parameter, int *value)
   }
 
   if(!found_par)
-    mabort(FAILURE, "Unable to find parameter %s\n", parameter);
+    mabort(FAILURE, "Unable to find parameter %s", parameter);
 }
 
 /* ************************************************************************** */
@@ -173,7 +172,7 @@ get_string(char *parameter, char *value)
       continue;
 
     if(sscanf(line, "%s %s", name, xvalue) != 2)
-      mabort(FAILURE, "Syntax error on line %i in parameter file\n", line_num);
+      mabort(FAILURE, "Syntax error on line %i in parameter file", line_num);
 
     if(strcmp(parameter, name) == 0)
     {
@@ -183,5 +182,5 @@ get_string(char *parameter, char *value)
   }
 
   if(!found_par)
-    mabort(FAILURE, "Unable to find parameter %s\n", parameter);
+    mabort(FAILURE, "Unable to find parameter %s", parameter);
 }

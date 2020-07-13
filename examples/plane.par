@@ -5,7 +5,8 @@ Geometry.nphotons 1e6
 
 ## Grid parameters
 Geometry.ncells 10
-Geometry.rmax(m)  1.0
-Geometry.mass_density_exponent -2
+Geometry.rmin(m) 2
+Geometry.rmax(m) 10.0
+Geometry.density_exponent -2
 Geometry.mass_density_base(kg/m3) 1e-8
 Geometry.scat_albedo 1.0

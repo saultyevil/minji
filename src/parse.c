@@ -12,8 +12,6 @@
 #include <string.h>
 
 #include "minji.h"
-#include "log.h"
-#include "functions.h"
 
 /* ************************************************************************** */
 /**
@@ -40,7 +38,7 @@ get_command_line_arguments(int argc, char **argv)
   char *parameter_file_path = malloc(LINELENGTH);
 
   if(!parameter_file_path)
-    mabort(FAILURE, "Unable to allocate memory to store parameter file\n");
+    mabort(FAILURE, "Unable to allocate memory to store parameter file");
 
   if(argc == 1)
   {
@@ -52,7 +50,7 @@ get_command_line_arguments(int argc, char **argv)
   }
   else
   {
-    mabort(FAILURE, "Too many arguments provided\n");
+    mabort(FAILURE, "Too many arguments provided");
   }
 
   return parameter_file_path;

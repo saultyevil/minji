@@ -8,12 +8,10 @@
 *
 * *************************************************************************** */
 
+#include <math.h>
 #include <time.h>
-#include <stdio.h>
 
 #include "minji.h"
-#include "log.h"
-#include "functions.h"
 
 /* ************************************************************************** */
 /**
@@ -22,74 +20,13 @@
 * @details
 *
 * *************************************************************************** */
-
-static double
-ds_to_escape(const struct Photon p)
-{
-  double smax;
-
-  if(p.nx > 0)
-  {
-    smax = (Geometry.rmax - p.x) / p.nx;
-  }
-  else if(p.nx < 0)
-  {
-    smax = -1.0 * p.x / p.nx;
-  }
-  else
-  {
-    smax = 100 * Geometry.rmax;
-  }
-
-  return smax;
-}
-
-/* ************************************************************************** */
-/**
-* @brief
-*
-* @details
-*
-* *************************************************************************** */
-
-/*
- * If the distance to the next cell wall is small, then we will consider the
- * photon to be in the next cell wall, move it into the next cell and then
- * calculate dx for the new cell
- */
 
 static double
 ds_to_cell_wall(struct Photon p)
 {
   double ds;
 
-  if(p.nx > 0)
-  {
-    ds = (GridCells[p.icell].r - p.x) / p.nx;
-    if(ds < Geometry.pushthrough_distance)
-    {
-      p.x = GridCells[p.icell].r;
-      p.icell += 1;
-      ds = (GridCells[p.icell].r - p.x) / p.nx;
-    }
-  }
-  else if(p.nx < 0)
-  {
-    ds = (GridCells[p.icell - 1].r - p.x) / p.nx;
-    if(ds < Geometry.pushthrough_distance)
-    {
-      p.x = GridCells[p.icell - 1].r;
-      p.icell -= 1;
-      ds = (GridCells[p.icell - 1].r - p.x) / p.nx;
-    }
-  }
-  else
-  {
-    ds = 100 * Geometry.rmax;
-  }
-
-  if(ds < 0)
-    merror("trans_phot: p %i: dx < 0 (dx = %f)\n", p.n, ds);
+  ds = spherical_ds_to_cell_edge(p);  // TODO 1d case
 
   return ds;
 }
@@ -102,8 +39,8 @@ ds_to_cell_wall(struct Photon p)
 *
 * *************************************************************************** */
 
-extern void
-move_photon_to_scatter(struct Photon p)
+static void
+move_photon_to_scatter(struct Photon *p)
 {
   double tau_scat;
   get_random_optical_depth(&tau_scat);
@@ -114,71 +51,42 @@ move_photon_to_scatter(struct Photon p)
    * the photon is already at the edge of the simulation grid and exit
    */
 
-  double smax = ds_to_escape(p) * Geometry.smax_transport_frac;
-  if(smax < Geometry.pushthrough_distance)
+  double smax_escape = ds_to_sphere(Geometry.rmax, *p);
+  if(smax_escape < Geometry.pushthrough_distance)
   {
-    p.in_grid = false;
+    p->in_grid = false;
     return;
   }
 
   double ds = 0;
   double tau = 0;
-  double ds_move = 0;
+  double ds_move;
 
-  while(tau < tau_scat && ds < smax)
+  while(tau < tau_scat && ds < smax_escape)
   {
-    /*
-     * Figure out the distance to the nearest cell wall, then calculate the
-     * total optical depth a photon will encounter as it traverses towards the
-     * cell wall. Recall that this is given by,
-     *      dtau = rho * kappa * ds
-     */
+    double ds_cell_edge = ds_to_cell_wall(*p);
+    double tau_cell_edge = GridCells[p->grid].mdensity * ds_cell_edge;
 
-    double dcell = ds_to_cell_wall(p);
-    double tau_cell = GridCells[p.icell].mass_density * dcell;
-
-    /*
-     * If the total optical depth PLUS the optical depth experience by the
-     * photon is more than the optical depth to the next scattering event,
-     * then the photon is moved a distance given by tau_cell. The while loop
-     * will then break. Otherwise, the photon does not scatter in the current
-     * cell, hence the photon will be moved to the edge of the cell and the
-     * while loop will iterate again.
-     */
-
-    if((tau + tau_cell) >= tau_scat)
+    if((tau + tau_cell_edge) >= tau_scat)
     {
-      ds_move = (tau_scat - tau) / (GridCells[p.icell].mass_density);
+      ds_move = (tau_scat - tau) / (tau_cell_edge);
     }
     else
     {
-      ds_move = dcell;
+      ds_move = ds_cell_edge;
     }
 
-    /*
-     * The running totals for optical depth and ds moved are now incremented
-     * and the position of the photon is updated
-     */
 
     ds += ds_move;
-    tau += tau_cell;
-    move_photon(&p, ds_move);
-  }
+    // TODO move to edge of grid instead or something
+    if (ds > smax_escape)
+    {
+      p->in_grid = false;
+      break;
+    }
 
-  /*
-   * If the photon has moved greater than the allowed s_max, then the photon is
-   * no longer within the atmosphere, hence p->in_grid is switched to FALSE to
-   * indicate this. Otherwise, the photon is still within the atmosphere hence
-   * the photon's position is updated
-   */
-
-  if(ds >= smax)
-  {
-    p.in_grid = false;
-  }
-  else
-  {
-    move_photon(&p, ds_move);
+    tau += tau_cell_edge;
+    move_photon(p, ds_move);
   }
 }
 
@@ -193,26 +101,63 @@ move_photon_to_scatter(struct Photon p)
 extern void
 transport_photons(void)
 {
-  int nscat = 0;
+  int output = Geometry.nphotons / 10;
+  if(output < 1)
+    output = 1;
 
-  mlog("Beginning MCRT iterations\n");
   const struct timespec mcrt_start = get_current_time();
 
+  int nscat = 0;
   for(int i = 0; i < Geometry.nphotons; i++)
   {
+    if(i % output == 0)
+      mlog("- %-9i of %-9i photons transported or %-03.2f%%", i, Geometry.nphotons, (double) i / Geometry.nphotons * 100);
+
     struct Photon p = Photons[i];
 
-    move_photon_to_scatter(p);
     while(p.in_grid)
     {
-      double xi = gsl_rand_num(0, 1);
-      if(xi < Geometry.scatter_albedo)
+      struct Photon porig = p;
+      move_photon_to_scatter(&p);
+
+      // check inner boundary
+      double ds_star = ds_to_sphere(Geometry.rmin, porig);
+      double position = vector_magnitude(p.xyz);
+      double path[3];
+      subtract_vectors(p.xyz, porig.xyz, path);
+      double pathlength = vector_magnitude(path);
+      if(position < Geometry.rmin || (ds_star < LARGE_NUMBER && pathlength))
       {
-        scatter_photon(&p);
-        nscat += 1;
+        p.in_grid = false;
+        break;
       }
 
-      move_photon_to_scatter(p);
+      // check outer boundary
+      double rhosq = p.xyz[0] * p.xyz[0] + p.xyz[1] * p.xyz[1];
+      double rmaxsq = Geometry.rmax * Geometry.rmax;
+
+      if(rhosq > rmaxsq)
+      {
+        p.in_grid = false;
+        break;
+      }
+      if(fabs(p.xyz[2]) > Geometry.rmax)
+      {
+        p.in_grid = false;
+        break;
+      }
+
+      double xi = gsl_rand_num(0, 1);
+      if(p.in_grid && xi < Geometry.scatter_albedo)
+      {
+        scatter_photon(&p);
+        p.nscat++;
+        nscat++;
+      }
     }
   }
+
+  mlog("- %-9i of %-9i photons transported or 100.00%%", Geometry.nphotons, Geometry.nphotons);
+  mlog("number of scatters = %i", nscat);
+  mlog("average number of scatters per photon = %i", (int) nscat / Geometry.nphotons);
 }

@@ -14,8 +14,6 @@
 #include <sys/stat.h>
 
 #include "minji.h"
-#include "log.h"
-#include "functions.h"
 
 FILE *lffp;
 
@@ -35,11 +33,11 @@ init_logfile(void)
 
   mkdir("log", 0755);
   strcpy (logfile_name, "log/logfile");
-  sprintf (tmp, "_%i.log", MPIConfig.current_process);
+  sprintf (tmp, "%i.log", MPIConfig.current_process);
   strcat (logfile_name, tmp);
 
-  if(!(lffp = fopen(logfile_name, "w")))
-    mabort(FAILURE, "Could not open logfile for write %s\n", logfile_name);
+  if(!(lffp = fopen(logfile_name, "weight")))
+    mabort(FAILURE, "Could not open logfile for write %s", logfile_name);
 }
 
 /* ************************************************************************** */
@@ -54,7 +52,7 @@ extern void
 close_logfile(void)
 {
   if(fclose(lffp))
-  merror("Could not close logfile\n");
+    merror("Could not close logfile");
 }
 
 /* ************************************************************************** */
@@ -75,9 +73,13 @@ mlog(char *fmt, ...)
   va_copy (arg_list_log, arg_list);
 
   if(MPIConfig.current_process == MPI_MAIN)
+  {
     vprintf(fmt, arg_list);
+    printf("\n");
+  }
 
   vfprintf(lffp, fmt, arg_list_log);
+  fprintf(lffp, "\n");
 
   va_end (arg_list);
   va_end (arg_list_log);

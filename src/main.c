@@ -12,7 +12,6 @@
 
 #include "minji.h"
 #include "fmt.h"
-#include "functions.h"
 
 /* ************************************************************************** */
 /**
@@ -34,7 +33,7 @@ main(int argc, char **argv)
   init_logfile();
   struct timespec start_time = get_current_time();
   print_current_time();
-  mlog("\n%s\n\n", FMT_SEPARATOR);
+  mlog("%s\n", FMT_SEPARATOR);
 
   char *parameter_file_path;
   parameter_file_path = get_command_line_arguments(argc, argv);
@@ -45,18 +44,23 @@ main(int argc, char **argv)
    * as the photons and the the density grid
    */
 
-  mlog("Beginning initialisation routines\n");
+  mlog("Beginning initialisation routines");
   init_minji();
   init_grid();
   init_photons();
 
+  /*
+   * Now the photons can be transported
+   */
+
+  mlog("Beginning photon transport");
   transport_photons();
 
   /*
    * Indicate the end of the simulation and clean up
    */
 
-  mlog("\n%s\n\n", FMT_SEPARATOR);
+  mlog("\n%s", FMT_SEPARATOR);
   print_time_elapsed(start_time, "Simulation completed in: ");
   clean_up();
 

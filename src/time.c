@@ -11,7 +11,6 @@
 #include <time.h>
 
 #include "minji.h"
-#include "functions.h"
 
 /* ************************************************************************** */
 /**
@@ -44,7 +43,7 @@ print_time_elapsed(struct timespec start_time, char *message)
 
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end_time);
   const double td = (double) ((end_time.tv_sec - start_time.tv_sec) + (end_time.tv_nsec - start_time.tv_nsec)) / 1e9;
-  mlog("%s %f seconds\n", message, td);
+  mlog("%s %f seconds", message, td);
 }
 
 /* ************************************************************************** */

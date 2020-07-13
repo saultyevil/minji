@@ -10,7 +10,6 @@
 * *************************************************************************** */
 
 #include "minji.h"
-#include "functions.h"
 
 /* ************************************************************************** */
 /**
@@ -25,12 +24,11 @@ extern void
 init_minji(void)
 {
   Geometry.nphotons = (int) 1e6;
-  Geometry.grid_type == GRID_LINEAR;
+  Geometry.grid_type = GRID_LINEAR;
   Geometry.ncells = 500;
-  Geometry.rmax = 1.0;
+  Geometry.rmax = 10;
+  Geometry.rmin = 2;
   Geometry.scatter_albedo = 1.0;
-  Geometry.smax_transport_frac = 0.90;
-  Geometry.pushthrough_distance = Geometry.rmax / Geometry.ncells / 1e5;
 
   init_gsl_seed();
 }

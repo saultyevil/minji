@@ -1,6 +1,6 @@
 /* ************************************************************************** */
 /**
-* @file
+* @file    vector.c
 * @author  Edward Parkinson
 * @brief
 *
@@ -9,9 +9,6 @@
 * *************************************************************************** */
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 
 #include "minji.h"
 
@@ -23,12 +20,24 @@
 *
 * *************************************************************************** */
 
-extern void
-clean_up(void)
+extern double
+dot_product(const double *u, const double *v)
 {
-  free(GridCells);
-  close_logfile();
-  close_parameter_file();
+  return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+}
+
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern double
+vector_magnitude(const double *u)
+{
+  return sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
 }
 
 /* ************************************************************************** */
@@ -40,19 +49,9 @@ clean_up(void)
 * *************************************************************************** */
 
 extern void
-exit_program(const int error_code, char *fmt, ...)
+subtract_vectors(const double *u, const double *v, double *w)
 {
-  va_list arg_list;
-
-  va_start (arg_list, fmt);
-  printf("ABORTING : ");
-  vprintf(fmt, arg_list);
-  printf("\nExited with error code %i\n", error_code);
-  va_end(arg_list);
-
-#if MPI_ON
-  MPI_Abort(MPI_MAIN_COMM, error_code);
-#else
-  exit(error_code);
-#endif
+  w[0] = v[0] - u[0];
+  w[1] = v[1] - u[1];
+  w[2] = v[2] - u[2];
 }

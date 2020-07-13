@@ -8,38 +8,46 @@
 *
 * *************************************************************************** */
 
+#include <time.h>
 #include <stdbool.h>
+
+#include "constants.h"
+#include "log.h"
+#include "algebra.h"
 
 #define SUCCESS 0
 #define FAILURE 1
 #define LINELENGTH 128
+#define PHOTON_OUTSIDE_GRID -1
+#define NGHOSTCELLS 2
 
 #ifdef MPI_ON
-
 #include <mpi.h>
-
 #define MPI_MAIN_COMM MPI_COMM_WORLD
+#endif
+
 #define MPI_MAIN 0
 
 struct MPIConfigSettings
 {
-  int nprocesses;
   int nphotons;
+  int nprocesses;
   int current_process;
 } MPIConfig;
-#endif
 
 // Structure to contain the global geometry configuration
 struct GeometrySettings
 {
   int ncells;
   int nphotons;
-  double rmax;
-  double mass_density_bottom;
-  double mass_density_exponent;
-  double smax_transport_frac;
+  double rmin, rmax;
+  double mass_initial;
+  double density_exponent;
   double pushthrough_distance;
   double scatter_albedo;
+  double *xpoints;
+  double *ypoints;
+  double *zpoints;
 
   enum GridType
   {
@@ -53,8 +61,9 @@ struct GeometrySettings
 struct GridCell
 {
   int n;
-  double r;
-  double mass_density;
+  double xyz[3];
+  double xyz_cen[3];
+  double mdensity;
 } *GridCells;  // Array for all the grid cells
 
 // Structure to define an individual photon
@@ -62,8 +71,11 @@ struct Photon
 {
   bool in_grid;
   int n;
-  int icell;
-  double x, y, z;
-  double nx, ny, nz;
-  double w, w0;
+  int grid;
+  int nscat;
+  double xyz[3];
+  double ijk[3];
+  double weight;
 } *Photons;  // Array for all the photons
+
+#include "functions.h"

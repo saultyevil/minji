@@ -13,8 +13,24 @@
 #include <stdbool.h>
 
 #include "minji.h"
-#include "log.h"
-#include "functions.h"
+
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern int
+find_grid_cell(const double *xyz)
+{
+  int n;
+
+  n = spherical_where_in_grid(xyz);  // TODO 1d case
+
+  return n;
+}
 
 /* ************************************************************************** */
 /**
@@ -25,12 +41,12 @@
 * *************************************************************************** */
 
 extern void
-move_photon(struct Photon *p, double ds)
+move_photon(struct Photon *p, const double ds)
 {
-  p->x += ds * p->nx;
-  p->y += ds * p->ny;
-  p->z += ds * p->nz;
-  p->icell = (int) (p->x * Geometry.ncells / Geometry.rmax);
+  p->xyz[0] += ds * p->ijk[0];
+  p->xyz[1] += ds * p->ijk[1];
+  p->xyz[2] += ds * p->ijk[2];
+  p->grid = find_grid_cell(p->xyz);
 }
 
 /* ************************************************************************** */
@@ -46,7 +62,8 @@ create_photon(struct Photon *p, int number)
 {
   p->n = number;
   p->in_grid = true;
-  p->w = 1.0;
+  p->weight = 1.0;
+  p->nscat = 0;
 
   /*
    * Generate a random theta and phi direction and update the x, y and z
@@ -55,18 +72,18 @@ create_photon(struct Photon *p, int number)
 
   double theta, phi;
   get_random_theta_phi_direction(&theta, &phi);
-  p->nx = sin(theta) * cos(phi);
-  p->ny = sin(theta) * sin(phi);
-  p->nz = cos(theta);
+  p->ijk[0] = sin(theta) * cos(phi);
+  p->ijk[1] = sin(theta) * sin(phi);
+  p->ijk[2] = cos(theta);
 
   /*
-   * Set photons to be emitted from the origin, i.e. the first cell
+   * Set photons to be emitted from the skin of the central source
    */
 
-  p->x = 0;
-  p->y = 0;
-  p->z = 0;
-  p->icell = (int) (p->x * Geometry.ncells / Geometry.rmax);
+  random_spherical_vector(p->xyz, Geometry.rmin + Geometry.pushthrough_distance);
+  p->grid = find_grid_cell(p->xyz);
+  if (p->grid == PHOTON_OUTSIDE_GRID)
+    merror("photon %i is not in the grid when defined", p->n);
 }
 
 /* ************************************************************************** */
@@ -80,22 +97,25 @@ create_photon(struct Photon *p, int number)
 extern void
 init_photons(void)
 {
-  mlog("Initialising photon structure\n");
+  mlog("Initialising photons");
 
-  double nphotons;
+  double nphotons = 0;
   read_double("Geometry.nphotons", &nphotons);
-  if((Geometry.nphotons = (int) nphotons) <= 0)
-    mabort(FAILURE, "Invalid value for n_photons: n_photons > 0\n");
+  Geometry.nphotons = (int) nphotons;
+  if(Geometry.nphotons <= 0)
+    mabort(FAILURE, "Invalid value for n_photons %e: n_photons > 0", (double) Geometry.nphotons);
 
   unsigned long memory = Geometry.nphotons * sizeof(struct Photon);
 
   if(!(Photons = calloc(Geometry.nphotons, sizeof(struct Photon))))
-    mabort(FAILURE, "init_photons: Couldn't allocate %f bytes for %1.2e photons\n", memory, (double) Geometry.nphotons);
+    mabort(FAILURE, "init_photons: Couldn't allocate %e bytes for %3.2e photons", (double) memory, (double) Geometry.nphotons);
 
-  mlog("Allocated %1.2e bytes for %1.2e photons\n", memory, (double) Geometry.nphotons);
+  mlog("Allocated %e bytes for %e photons", (double) memory, (double) Geometry.nphotons);
 
-  for(int i = 0; i < Geometry.nphotons; i++)
+  for(int i = 0; i < Geometry.nphotons; ++i)
+  {
     create_photon(&Photons[i], i);
+  }
 }
 
 

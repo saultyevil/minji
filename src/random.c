@@ -14,7 +14,6 @@
 #include <gsl/gsl_rng.h>
 
 #include "minji.h"
-#include "functions.h"
 
 const gsl_rng *rng;
 
@@ -47,7 +46,7 @@ init_gsl_seed(void)
   }
   else
   {
-    mabort(FAILURE, "GSL error: couldn't allocate RNG\n");
+    mabort(FAILURE, "GSL error: couldn't allocate RNG");
   }
 }
 
@@ -88,8 +87,26 @@ get_random_optical_depth(double *const tau)
 * *************************************************************************** */
 
 extern void
-get_random_theta_phi_direction(double *const theta, double *const phi)
+get_random_theta_phi_direction(double *theta, double *phi)
 {
   *theta = acos(2 * gsl_rand_num(0, 1) - 1);
   *phi = 2 * M_PI * gsl_rand_num(0, 1);
+}
+
+/* ************************************************************************** */
+/**
+* @brief
+*
+* @details
+*
+* *************************************************************************** */
+
+extern void
+random_spherical_vector(double *u, double radius)
+{
+  double theta, phi;
+  get_random_theta_phi_direction(&theta, &phi);
+  u[0] = radius * sin(theta) * cos(phi);
+  u[1] = radius * sin(theta) * sin(phi);
+  u[2] = radius * cos(theta);
 }
